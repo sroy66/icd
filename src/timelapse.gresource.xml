@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <gresources>
-  <gresource prefix="/org/coanda/TimeLapse/templates">
-    <file compressed="true" alias="index.tmpl">templates/index.tmpl</file>
+  <gresource>
+    <file compressed="true">templates/index.tmpl</file>
   </gresource>
-  <gresource prefix="/org/coanda/TimeLapse/styles">
-    <file compressed="true" alias="layout.css">styles/layout.css</file>
+  <gresource prefix="/static">
+    <file compressed="true" alias="styles/layout.css">static/styles/layout.css</file>
   </gresource>
 </gresources>

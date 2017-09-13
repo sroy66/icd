@@ -6,6 +6,8 @@ public class TimeLapse.App : GLib.Object {
     public App () {
         router = new TimeLapse.Router ();
         server = VSGI.Server.@new ("http", handler: router);
+
+        //router.use (Valum.basic ());
     }
 
     public int run (string[] args) {

@@ -3,3 +3,4 @@
 
 _build/
 subprojects/valum/
+subprojects/template-glib/

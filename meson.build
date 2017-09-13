@@ -37,21 +37,51 @@ status += [
   '', ''
 ]
 
+add_project_arguments([
+  ['-I' + join_paths(meson.current_source_dir(), 'vapi')]
+], language: 'c')
+
+add_project_arguments([
+  ['--vapidir', join_paths(meson.current_source_dir(), 'vapi')],
+  ['--pkg', 'libgphoto2'],
+], language: 'vala')
+
 dep_glib = dependency('glib-2.0')
 dep_gobject = dependency('gobject-2.0')
 dep_gio = dependency('gio-2.0')
 dep_soup = dependency('libsoup-2.4')
+dep_tmpl = dependency('template-glib-1.0')
 dep_vsgi = subproject('valum').get_variable('vsgi')
 dep_valum = subproject('valum').get_variable('valum')
+dep_posix = meson.get_compiler('vala').find_library('posix')
+
+#lib_gphoto = meson.get_compiler('c').find_library('libgphoto2')
+#vapi_gphoto = meson.get_compiler('vala').find_library('libgphoto2', dirs: join_paths(meson.current_source_dir(), 'vapi'))
+#dep_gphoto = declare_dependency(dependecies: [lib_gphoto, vapi_gphoto])
+
+dep_gphoto = dependency('libgphoto2')
+
+# using template-glib as a subproject failed
+#libtemplate_glib = subproject('template-glib',
+#  default_options: [
+#    'package_subdir=' + meson.project_name()
+#  ]
+#)
+#dep_tmpl = libtemplate_glib.get_variable('libtemplate_glib_dep')
 
 tl_deps = [
   dep_glib,
   dep_gobject,
   dep_gio,
   dep_soup,
+  dep_tmpl,
   dep_vsgi,
   dep_valum,
+  dep_posix,
+  dep_gphoto,
 ]
+
+gnome = import('gnome')
 
 subdir('data')
 subdir('src')
