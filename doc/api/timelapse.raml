@@ -1,0 +1,292 @@
+#%RAML 1.0
+
+# References
+#
+#        RAML doc: https://github.com/raml-org/raml-spec/blob/master/versions/raml-10/raml-10.md
+#  response codes: https://httpstatuses.com/
+#      async jobs: https://farazdagi.com/2014/rest-and-long-running-jobs
+
+title: TimeLapse
+version: v1
+baseUri: http://{ipAddress}/{version}
+baseUriParameters:
+  ipAddress:
+    description: IP address of the host running the service
+mediaType: application/json
+types:
+  Image:
+    type: object
+    properties:
+      filename: string
+      timestamp: string
+      width?: number
+      height?: number
+      data?:
+        description: Read-only data encoded using base64
+        type: string
+  Images:
+    type: array
+    items: Image
+    minItems: 0
+    uniqueItems: true
+    example:
+      - # start item 1
+        filename: image-file-01.png
+        timestamp: 1505342124
+        width: 1920
+        height: 1080
+      - # start item 2
+        filename: image-file-02.png
+        timestamp: 1505342130
+        width: 1920
+        height: 1080
+  Capture:
+    type: object
+    properties:
+      filename?: string
+      filetype?:
+        type: string
+        enum: [ 'jpeg', 'png', 'raw', 'raw+jpeg', 'raw+png' ]  # XXX should get actual camera options
+        default: 'png'
+      download?: boolean
+      deleteCamImage?:
+        description: Removes the image that was captured from the camera
+        type: boolean
+    example:
+      filename: sample-image.png
+      download: true
+      deleteCamImage: true
+  Camera:
+    type: object
+    properties:
+      device: string
+      model: string
+      connected?:
+        description: Read-only property of the connection status
+        type: boolean
+      state?:
+        description: Trigger a state change of the camera
+        type: string
+        enum: [ 'connect', 'disconnect' ]
+  Cameras:
+    type: array
+    items: Camera
+    minItems: 0
+    uniqueItems: true
+    example:
+      -
+        device: Canon
+        model: XYZ
+        connected: true
+      -
+        device: Canon
+        model: XYZ
+        connected: false
+  Setting:
+    type: object
+    properties:
+      key: string
+      value: string
+  Settings:
+    type: array
+    items: Setting
+    minItems: 0
+    uniqueItems: true
+    example:
+      -
+        key: ISO
+        value: 4000
+      -
+        key: Exposure
+        value: 0.2s
+  Job:
+    type: object
+    properties:
+      id: string
+      interval: number
+      count: number
+      running?:
+        description: Read-only property of the run status
+        type: boolean
+      state?:
+        description: Trigger a state change of the job
+        type: string
+        enum: [ 'start', 'stop', 'pause' ]
+  Jobs:
+    type: array
+    items: Job
+    minItems: 0
+    uniqueItems: true
+    example:
+    -
+      id: job1
+      interval: 2
+      count: 999
+    -
+      id: job2
+      interval: 12
+      count: 201
+  Message:
+    type: object
+    properties:
+      message: string
+  Task:
+    type: object
+    properties:
+      status:
+        type: string
+        enum: [ 'pending', 'working', 'finished' ]
+      eta: string
+      method:
+        type: string
+        enum: [ 'post', 'put', 'delete' ]
+      path: string
+  Queue:
+    type: array
+    items: Task
+    minItems: 0
+    uniqueItems: true
+    example:
+    -
+      status: pending
+      eta: 2s
+      method: post
+      path: /jobs/98765
+    -
+      status: working
+      eta: 10s
+      method: delete
+      path: /images
+
+/images:
+  get:
+    description: All images
+    responses:
+      200:
+        body:
+          application/json:
+            type: Images
+  delete:
+    description: Delete all images
+    responses:
+      202:
+        headers:
+          Location:
+            example: /queue/12345
+  /latest:
+    get:
+      description: Return the most recently captured image
+      responses:
+        200:
+          body:
+            application/json:
+              type: Image
+  /{id}:
+    get:
+      description: Return an image for a given ID
+      responses:
+        200:
+          body:
+            application/json:
+              type: Image
+    put:
+      description: Update an image for a given ID
+      body:
+        application/json:
+          type: Image
+    delete:
+      description: Delete an image for a given ID
+
+/cameras:
+  get:
+    description: All cameras
+    responses:
+      200:
+        body:
+          application/json:
+            type: Cameras
+  /{id}:
+    get:
+      description: Return a camera for a given ID
+      responses:
+        200:
+          body:
+            application/json:
+              type: Camera
+    put:
+      description: Update a camera for a given ID
+      body:
+        application/json:
+          type: Camera
+    /settings:
+      get:
+        description: Return all settings of a camera for a given ID
+        responses:
+          200:
+            body:
+              application/json:
+                type: Settings
+      /{key}:
+        get:
+          description: Get a setting of a camera for a given ID and key
+          responses:
+            200:
+              body:
+                application/json:
+                  type: Setting
+        put:
+          description: Update the setting of a camera for a given ID and key
+          body:
+            application/json:
+              type: Setting
+
+/jobs:
+  get:
+    description: All jobs
+    responses:
+      200:
+        body:
+          application/json:
+            type: Jobs
+  /{id}:
+    get:
+      description: Get the job with the ID provided
+      responses:
+        200:
+          body:
+            application/json:
+              type: Job
+    post:
+      description: Create a new job
+      body:
+        application/json:
+          type: Job
+    put:
+      description: Update an existing job
+      body:
+        application/json:
+          type: Job
+    delete:
+      description: Delete a job with a given ID
+
+/queue:
+  get:
+    description: All queued asynchronous tasks
+    responses:
+      200:
+        body:
+          application/json:
+            type: Queue
+  /{id}:
+    get:
+      description: Get a single asynchronous task from the queue
+      responses:
+        200:
+          body:
+            application/json:
+              type: Task
+        303:
+          headers:
+            Location:
+              example: /jobs/98765
+        410:
