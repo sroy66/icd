@@ -3,27 +3,33 @@
 }
 
 html {
-  font-family: sans-serif;
+  /*
+   *font-family: sans-serif;
+   */
 }
 
 body {
   background: #fff;
   color: #24292e;
-  display: block;
-  font-size: 14px;
-  line-height: 1.5;
-  min-width: 1020px;
-  word-wrap: break-word;
+  /*
+   *display: block;
+   *font-size: 14px;
+   *line-height: 1.5;
+   *min-width: 1020px;
+   *word-wrap: break-word;
+   */
 }
 
 .header {
-  background: #24292e;
-  color: rgba(255, 255, 255, 0.75);
-  display: block;
-  font-size: 14px !important;
-  padding-top: 12px;
-  padding-bottom: 12px;
-  z-index: 1;
+  /*
+   *background: #24292e;
+   *color: rgba(255, 255, 255, 0.75);
+   *display: block;
+   *font-size: 14px !important;
+   *padding-top: 12px;
+   *padding-bottom: 12px;
+   *z-index: 1;
+   */
 }
 
 .main {

@@ -2,6 +2,7 @@
 <gresources>
   <gresource>
     <file compressed="true">templates/index.tmpl</file>
+    <file compressed="true">templates/nav.tmpl</file>
   </gresource>
   <gresource prefix="/static">
     <file compressed="true" alias="styles/layout.css">static/styles/layout.css</file>
