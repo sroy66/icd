@@ -21,6 +21,12 @@ public class TimeLapse.Router : Valum.Router {
         use (basic ());
         use (accept ("text/html"));
 
+        /* Connect to the database */
+        once ((req, res, next) => {
+            connect_db ();
+            return next ();
+        });
+
         /* Routes */
 
         rule (Method.GET, "/", route_index_cb);
@@ -33,6 +39,9 @@ public class TimeLapse.Router : Valum.Router {
         var image_router = new ImageRouter ();
         use (subdomain ("image", image_router.handle));
         use (basepath ("/image", image_router.handle));
+    }
+
+    private void connect_db () {
     }
 
     private bool route_index_cb (Request req, Response res, NextCallback next, Valum.Context ctx)
