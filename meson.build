@@ -49,6 +49,7 @@ add_project_arguments([
 dep_glib = dependency('glib-2.0')
 dep_gobject = dependency('gobject-2.0')
 dep_gio = dependency('gio-2.0')
+dep_gee = dependency('gee-1.0')
 dep_soup = dependency('libsoup-2.4')
 dep_tmpl = dependency('template-glib-1.0')
 dep_vsgi = subproject('valum').get_variable('vsgi')
@@ -73,6 +74,7 @@ tl_deps = [
   dep_glib,
   dep_gobject,
   dep_gio,
+  dep_gee,
   dep_soup,
   dep_tmpl,
   dep_vsgi,

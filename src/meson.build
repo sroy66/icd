@@ -7,6 +7,7 @@ tl_sources = [
   'app.vala',
   'config.vala',
   'main.vala',
+  'model.vala',
   'router.vala',
   'models/camera.vala',
   'models/image.vala',
