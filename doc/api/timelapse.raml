@@ -112,6 +112,10 @@ types:
         description: Trigger a state change of the job
         type: string
         enum: [ 'start', 'stop', 'pause' ]
+      trigger?:
+        description: Determine when/how the job should be executed
+        type: string
+        enum: [ 'now', 'int', 'ext' ]
   Jobs:
     type: array
     items: Job
@@ -248,6 +252,11 @@ types:
         body:
           application/json:
             type: Jobs
+  post:
+    description: Create a new job
+    body:
+      application/json:
+        type: Job
   /{id}:
     get:
       description: Get the job with the ID provided
@@ -256,11 +265,6 @@ types:
           body:
             application/json:
               type: Job
-    post:
-      description: Create a new job
-      body:
-        application/json:
-          type: Job
     put:
       description: Update an existing job
       body:

@@ -4,10 +4,14 @@ tl_resources = gnome.compile_resources('timelapse-resources',
 )
 
 tl_sources = [
-  'tl-app.vala',
-  'tl-config.vala',
-  'tl-main.vala',
-  'tl-router.vala',
+  'app.vala',
+  'config.vala',
+  'main.vala',
+  'router.vala',
+  'models/camera.vala',
+  'models/image.vala',
+  'routes/cameras.vala',
+  'routes/images.vala',
 ]
 
 executable('tl', tl_resources + tl_sources,
