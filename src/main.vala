@@ -12,8 +12,6 @@ public class TimeLapse.Main : GLib.Object {
     };
 
     private Main () {
-        app = new TimeLapse.App ();
-
         if (filename != null) {
             config = TimeLapse.Config.get_default ();
             try {
@@ -25,6 +23,8 @@ public class TimeLapse.Main : GLib.Object {
                 error (e.message);
             }
         }
+
+        app = new TimeLapse.App ();
     }
 
     private static int main (string[] args) {

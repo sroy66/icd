@@ -4,9 +4,8 @@ tl_resources = gnome.compile_resources('timelapse-resources',
 )
 
 tl_sources = [
-  'app.vala',
   'config.vala',
-  'main.vala',
+  'database.vala',
   'model.vala',
   'router.vala',
   'models/camera.vala',
@@ -15,8 +14,22 @@ tl_sources = [
   'routes/images.vala',
 ]
 
-executable('tl', tl_resources + tl_sources,
-       install: true,
-     vala_args: [ '--pkg', 'libgphoto2' ],
+tl_app_sources = [
+  'app.vala',
+  'main.vala',
+]
+
+tl_lib = library('tl', tl_sources,
   dependencies: tl_deps,
+   vala_header: 'tl.h',
+       install: false,
+)
+
+executable('tl', tl_resources + tl_sources + tl_app_sources,
+       install: true,
+  dependencies: tl_deps,
+)
+
+tl = declare_dependency(include_directories: include_directories('.'),
+  link_with: tl_lib,
 )

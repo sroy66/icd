@@ -44,14 +44,17 @@ add_project_arguments([
 add_project_arguments([
   ['--vapidir', join_paths(meson.current_source_dir(), 'vapi')],
   ['--pkg', 'libgphoto2'],
+  ['--pkg', 'libgda-5.0'],
 ], language: 'vala')
 
 dep_glib = dependency('glib-2.0')
 dep_gobject = dependency('gobject-2.0')
 dep_gio = dependency('gio-2.0')
-dep_gee = dependency('gee-1.0')
+dep_gee = dependency('gee-0.8')
+dep_gda = dependency('libgda-5.0')
 dep_soup = dependency('libsoup-2.4')
 dep_tmpl = dependency('template-glib-1.0')
+dep_xml = dependency('libxml-2.0')
 dep_vsgi = subproject('valum').get_variable('vsgi')
 dep_valum = subproject('valum').get_variable('valum')
 dep_posix = meson.get_compiler('vala').find_library('posix')
@@ -75,8 +78,10 @@ tl_deps = [
   dep_gobject,
   dep_gio,
   dep_gee,
+  dep_gda,
   dep_soup,
   dep_tmpl,
+  dep_xml,
   dep_vsgi,
   dep_valum,
   dep_posix,
@@ -87,5 +92,6 @@ gnome = import('gnome')
 
 subdir('data')
 subdir('src')
+subdir('tests')
 
 message('\n  '.join(status))
