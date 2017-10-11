@@ -1,4 +1,4 @@
-project('time-lapse', [ 'c', 'vala' ],
+project('timelapse', [ 'c', 'vala' ],
           license: 'GPL3+',
           version: '0.1.0',
     meson_version: '>= 0.40.1',
@@ -22,7 +22,7 @@ status = [
 # Warning message
 if (version_split[1].to_int() % 2 == 1)
   status += [
-    'You are building a debug version of FSM. There may be more bugs in',
+    'You are building a debug version of TL. There may be more bugs in',
     'this version that you are comfortable with.',
     '', ''
   ]
@@ -90,10 +90,34 @@ tl_deps = [
   dep_gphoto,
 ]
 
+# Installation paths
+pkg_datadir = join_paths(get_option('prefix'), get_option('datadir'), meson.project_name())
+pkg_sysconfdir = join_paths(get_option('prefix'), get_option('sysconfdir'), meson.project_name())
+
+# Create config.h
+conf = configuration_data()
+
+conf.set_quoted('PACKAGE_NAME', meson.project_name())
+conf.set_quoted('PACKAGE_VERSION', meson.project_version())
+conf.set_quoted('PACKAGE_STRING', '@0@-@1@'.format(meson.project_name(), meson.project_version()))
+
+# For i18n
+conf.set_quoted('GETTEXT_PACKAGE', meson.project_name())
+
+# Write config.h
+configure_file(
+         output: 'config.h',
+  configuration: conf,
+)
+
 gnome = import('gnome')
 
-subdir('data')
 subdir('src')
+subdir('data')
 subdir('tests')
 
-message('\n  '.join(status))
+if get_option('enable-systemd')
+  meson.add_install_script('build-aux/meson/meson-post-install.sh')
+endif
+
+message('\n'.join(status))

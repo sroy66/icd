@@ -1,0 +1,11 @@
+[Unit]
+Description=Image Capture Microservice
+AssertPathExists=@sysconfdir@
+
+[Service]
+User=pi
+Group=pi
+ExecStart=@bindir@/timelapse --config @sysconfdir@/timelapse/config.ini
+
+[Install]
+WantedBy=default.target
