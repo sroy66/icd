@@ -5,7 +5,7 @@ public int main (string[] args) {
 	Test.init (ref args);
 
 	Test.add_func ("/api/images", () => {
-		var router = new TimeLapse.ImageRouter (new TimeLapse.Model ());
+		var router = new TimeLapse.ImageRouter ();
         /*
 		 *router.get ("/api/images", (req, res) => {
          *    return true;

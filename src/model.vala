@@ -3,9 +3,18 @@ public class TimeLapse.Model : GLib.Object {
     /* FIXME Put all database related stuff into this database object */
     private TimeLapse.Database db;
 
+    private static Once<TimeLapse.Model> _instance;
+
     /* Object repositories */
     public Repository<TimeLapse.Camera?> cameras { get; construct set; }
     public Repository<TimeLapse.Image?> images { get; construct set; }
+
+    /**
+     * @return Singleton for the Config class
+     */
+    public static unowned TimeLapse.Model get_default () {
+        return _instance.once (() => { return new TimeLapse.Model (); });
+    }
 
     public void init () {
         db = new TimeLapse.Database ();
@@ -34,76 +43,68 @@ public class TimeLapse.Model : GLib.Object {
             db.create_table (name, typeof (T));
         }
 
-        public void create (T object) {
-            var sql = "INSERT INTO %s".printf (name);
-            string[] columns = {};
-            var ocl = (ObjectClass) typeof (T).class_ref ();
-
-            foreach (var spec in ocl.list_properties ()) {
-                if (spec.get_nick () != "primary_key") {
-                    columns += "%s".printf (spec.get_name ());
-                }
+        public virtual void create (T object) {
+            try {
+                db.insert (name, object);
+            } catch (GLib.Error e) {
+                critical (e.message);
             }
-
-            sql += " (";
-            for (int i = 0; i < columns.length; i++) {
-                sql += columns[i];
-                if (i != columns.length - 1) {
-                    sql += ", ";
-                }
-            }
-            sql += ") VALUES (";
-            for (int i = 0; i < columns.length; i++) {
-                unowned ParamSpec? spec = ocl.find_property (columns[i]);
-                if (spec.value_type == typeof (string)) {
-                    string val;
-                    ((Object) object).get (columns[i], out val);
-                    sql += "\"%s\"".printf (val);
-                } else if (spec.value_type == typeof (bool)) {
-                    bool val;
-                    ((Object) object).get (columns[i], out val);
-                    sql += "%s".printf (val.to_string ());
-                } else if (spec.value_type == typeof (int)) {
-                    int val;
-                    ((Object) object).get (columns[i], out val);
-                    sql += "%s".printf (val.to_string ());
-                } else if (spec.value_type == typeof (long)) {
-                    long val;
-                    ((Object) object).get (columns[i], out val);
-                    sql += "%s".printf (val.to_string ());
-                } else if (spec.value_type == typeof (float)) {
-                    float val;
-                    ((Object) object).get (columns[i], out val);
-                    sql += "%s".printf (val.to_string ());
-                } else if (spec.value_type == typeof (double)) {
-                    double val;
-                    ((Object) object).get (columns[i], out val);
-                    sql += "%s".printf (val.to_string ());
-                } else {
-                    if (spec.get_blurb () == "blob") {
-                        debug ("Not doing anything with blobs yet");
-                    }
-                }
-                if (i != columns.length - 1) {
-                    sql += ", ";
-                }
-            }
-            sql += ")";
         }
 
         public virtual T? read (int id) {
-            return null;
+            T[] records;
+            try {
+                var val_id = Value (typeof (int));
+                val_id.set_int (id);
+                records = db.select (name, val_id);
+                /* FIXME This should probably throw an exception instead */
+                if (records.length == 0) {
+                    critical ("Read failed for ID '%d'", id);
+                    return null;
+                }
+            } catch (GLib.Error e) {
+                critical (e.message);
+            }
+            return records[0];
         }
 
-        public Gee.List<T> read_all () {
-            var list = new Gee.ArrayList<T> ();
+        public virtual GLib.SList<T> read_all () {
+            var list = new GLib.SList<T> ();
+            try {
+                T[] records = db.select (name);
+                foreach (var record in records) {
+                    list.append (record);
+                }
+            } catch (GLib.Error e) {
+                critical (e.message);
+            }
             return list;
         }
 
-        public void update (T object) {
+        public virtual void update (T object) {
+            try {
+                db.update (name, object);
+            } catch (GLib.Error e) {
+                critical (e.message);
+            }
         }
 
-        public void @delete (int id) {
+        public virtual void delete (int id) {
+            try {
+                var val_id = Value (typeof (int));
+                val_id.set_int (id);
+                db.delete (name, val_id);
+            } catch (GLib.Error e) {
+                critical (e.message);
+            }
+        }
+
+        public virtual void delete_all () {
+            try {
+                db.delete (name, null);
+            } catch (GLib.Error e) {
+                critical (e.message);
+            }
         }
     }
 

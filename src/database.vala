@@ -1,3 +1,10 @@
+public errordomain TimeLapse.DatabaseError {
+    EXECUTE_QUERY
+}
+
+/**
+ * FIXME Maybe... Don't pull config into this class, use Parameters[] instead (?)
+ */
 public class TimeLapse.Database : GLib.Object {
 
     public Gda.Connection conn { get; construct set; }
@@ -89,7 +96,7 @@ public class TimeLapse.Database : GLib.Object {
             } else if (spec.value_type == typeof (int)) {
                 value_type = "INTEGER";
             } else if (spec.value_type == typeof (long)) {
-                value_type = "REAL";
+                value_type = "BIGINT";
             } else if (spec.value_type == typeof (float)) {
                 value_type = "FLOAT";
             } else if (spec.value_type == typeof (double)) {
@@ -108,7 +115,7 @@ public class TimeLapse.Database : GLib.Object {
 
             var value = "%s %s".printf (spec.get_name (), value_type);
             if (spec.get_nick () == "primary_key") {
-                value += " PRIMARY KEY";
+                value += " NOT NULL PRIMARY KEY";
             }
 
             values += value;
@@ -140,4 +147,193 @@ public class TimeLapse.Database : GLib.Object {
             critical ("Error deleting table '%s': %s", name, e.message);
         }
     }
+
+    /**
+     * FIXME Needs to return a record set
+     * FIXME This should be a generic Type select with ID (?)
+     * FIXME Make the ID field a generic (?)
+     */
+    public T[] select<T> (string table, Value? id = null) throws GLib.Error {
+        try {
+            var ocl = (ObjectClass) typeof (T).class_ref ();
+            string? pk = null;
+            T[] result = {};
+
+            foreach (var spec in ocl.list_properties ()) {
+                if (spec.get_nick () == "primary_key") {
+                    pk = spec.get_name ();
+                }
+            }
+
+            if (pk == null) {
+                throw new DatabaseError.EXECUTE_QUERY (
+                    "No primary key was defined for '%s'", table);
+            }
+
+            var sql = "SELECT * FROM %s".printf (table);
+            if (id != null) {
+                sql += " WHERE %s IS %d".printf (pk, id.get_int ());
+            }
+            var dm = conn.execute_select_command (sql);
+
+            for (int i = 0; i < dm.get_n_rows (); i++) {
+                var obj = Object.@new (typeof (T));
+
+                for (int j = 0; j < dm.get_n_columns (); j++) {
+                    var col = dm.get_column_name (j);
+                    var val = dm.get_value_at (j, i);
+                    unowned ParamSpec? spec = ocl.find_property (col);
+
+                    if (spec == null) {
+                        throw new DatabaseError.EXECUTE_QUERY (
+                            "The query returned an invalid object definition");
+                    }
+
+                    if (spec.get_blurb () == "blob") {
+                        debug ("Not doing anything with blobs yet");
+                    } else {
+                        if (val.holds (typeof (string))) {
+                            obj[col] = val.get_string ();
+                        } else if (val.holds (typeof (bool))) {
+                            obj[col] = val.get_boolean ();
+                        } else if (val.holds (typeof (int))) {
+                            obj[col] = val.get_int ();
+                        } else if (val.holds (typeof (long))) {
+                            obj[col] = val.get_long ();
+                        } else if (val.holds (typeof (float))) {
+                            obj[col] = val.get_float ();
+                        } else if (val.holds (typeof (double))) {
+                            obj[col] = val.get_double ();
+                        }
+                    }
+                }
+
+                result += obj;
+            }
+
+            return result;
+        } catch (GLib.Error e) {
+            throw new DatabaseError.EXECUTE_QUERY (
+                "Could not read record from '%s': %s", table, e.message);
+        }
+    }
+
+    public void insert<T> (string table, T object) throws GLib.Error {
+        try {
+            var sql = "INSERT INTO %s".printf (table);
+            string[] columns = {};
+            var ocl = (ObjectClass) typeof (T).class_ref ();
+
+            foreach (var spec in ocl.list_properties ()) {
+                if (spec.get_nick () != "primary_key") {
+                    columns += spec.get_name ();
+                }
+            }
+
+            sql += " (";
+            for (int i = 0; i < columns.length; i++) {
+                sql += columns[i];
+                if (i != columns.length - 1) {
+                    sql += ", ";
+                }
+            }
+            sql += ") VALUES (";
+            /* FIXME See update for example that doesn't do this nonsense */
+            for (int i = 0; i < columns.length; i++) {
+                unowned ParamSpec? spec = ocl.find_property (columns[i]);
+                if (spec.value_type == typeof (string)) {
+                    string val;
+                    ((Object) object).get (columns[i], out val);
+                    sql += "\"%s\"".printf (val);
+                } else if (spec.value_type == typeof (bool)) {
+                    bool val;
+                    ((Object) object).get (columns[i], out val);
+                    sql += "%s".printf (val.to_string ());
+                } else if (spec.value_type == typeof (int)) {
+                    int val;
+                    ((Object) object).get (columns[i], out val);
+                    sql += "%s".printf (val.to_string ());
+                } else if (spec.value_type == typeof (long)) {
+                    long val;
+                    ((Object) object).get (columns[i], out val);
+                    sql += "%s".printf (val.to_string ());
+                } else if (spec.value_type == typeof (float)) {
+                    float val;
+                    ((Object) object).get (columns[i], out val);
+                    sql += "%s".printf (val.to_string ());
+                } else if (spec.value_type == typeof (double)) {
+                    double val;
+                    ((Object) object).get (columns[i], out val);
+                    sql += "%s".printf (val.to_string ());
+                } else {
+                    if (spec.get_blurb () == "blob") {
+                        debug ("Not doing anything with blobs yet");
+                    }
+                }
+                if (i != columns.length - 1) {
+                    sql += ", ";
+                }
+            }
+            sql += ")";
+            conn.execute_non_select_command (sql);
+        } catch (GLib.Error e) {
+            throw new DatabaseError.EXECUTE_QUERY (
+                "Error creating '%s' record: %s", table, e.message);
+        }
+    }
+
+    /**
+     * FIXME This should be a generic Type update with ID (?)
+     */
+    public void update<T> (string table, T object) throws GLib.Error {
+        try {
+            /* FIXME This is dumb */
+            int id = -1;
+            var sql = "UPDATE %s SET".printf (table);
+            var ocl = (ObjectClass) typeof (T).class_ref ();
+
+            foreach (var spec in ocl.list_properties ()) {
+                var val = Value (spec.value_type);
+                ((Object) object).get_property (spec.get_name (), ref val);
+                if (spec.get_nick () == "primary_key") {
+                    id = (int) val;
+                } else {
+                    sql += " %s = %s,".printf (spec.get_name (), val.strdup_contents ());
+                }
+            }
+
+            sql.data[sql.length - 1] = ' ';
+            sql += "WHERE id = %d".printf (id);
+
+            conn.execute_non_select_command (sql);
+        } catch (GLib.Error e) {
+            throw new DatabaseError.EXECUTE_QUERY (
+                "Error updating '%s' record: %s", table, e.message);
+        }
+    }
+
+    /**
+     * FIXME This should be a generic Type delete with ID (?)
+     * FIXME Make the ID field a generic
+     * FIXME Include a Type to lookup name of ID field
+     */
+    public void delete (string table, Value? id = null) throws GLib.Error {
+        try {
+            var sql = "DELETE FROM %s".printf (table);
+            sql += (id == null) ? "" : " WHERE id = %d".printf (id.get_int ());
+            conn.execute_non_select_command (sql);
+        } catch (GLib.Error e) {
+            throw new DatabaseError.EXECUTE_QUERY (
+                "Error deleting '%s' record: %s", table, e.message);
+        }
+    }
+
+    /**
+     * TODO Add a generic Record type
+     * XXX This requires libgda-6.0 which is still unstable/unreleased
+     */
+    /*
+     *public class Record<T> : GdaData.Record {
+     *}
+     */
 }

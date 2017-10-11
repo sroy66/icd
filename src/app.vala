@@ -5,10 +5,10 @@ public class TimeLapse.App : GLib.Object {
     private VSGI.Server server;
 
     public App () {
-        model = new TimeLapse.Model ();
+        model = TimeLapse.Model.get_default ();
         model.init ();
 
-        router = new TimeLapse.Router (model);
+        router = new TimeLapse.Router ();
         server = VSGI.Server.@new ("http", handler: router);
     }
 

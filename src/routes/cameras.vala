@@ -6,11 +6,6 @@ public class TimeLapse.CameraRouter : Valum.Router {
 
     private GPhoto.Camera camera;
     private GPhoto.Context gp_context;
-    private TimeLapse.Model model;
-
-    public CameraRouter (TimeLapse.Model model) {
-        this.model = model;
-    }
 
     construct {
         once ((req, res, next) => {

@@ -52,6 +52,7 @@ dep_gobject = dependency('gobject-2.0')
 dep_gio = dependency('gio-2.0')
 dep_gee = dependency('gee-0.8')
 dep_gda = dependency('libgda-5.0')
+dep_json = dependency('json-glib-1.0')
 dep_soup = dependency('libsoup-2.4')
 dep_tmpl = dependency('template-glib-1.0')
 dep_xml = dependency('libxml-2.0')
@@ -79,6 +80,7 @@ tl_deps = [
   dep_gio,
   dep_gee,
   dep_gda,
+  dep_json,
   dep_soup,
   dep_tmpl,
   dep_xml,

@@ -12,4 +12,11 @@ public class TimeLapse.Image : GLib.Object {
     public int height { get; set; }
 
     public signal void changed (int id, string property);
+
+    public string to_string () {
+        string str = "{ \"id\": %d, \"name\": \"%s\", \"timestamp\": %ld, \"width\": %d, \"height\": %d}".printf (
+            id, name, timestamp, width, height
+        );
+        return str;
+    }
 }

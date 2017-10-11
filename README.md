@@ -8,7 +8,7 @@ functionality over a REST API as a service.
 ### Fedora 24/25/26
 
 ```bash
-sudo dnf install libgphoto2-devel libgee-devel
+sudo dnf install libgphoto2-devel libgee-devel json-glib-devel
 sudo dnf install libgda-devel libgda-sqlite libgda-mysql libgda-postgres
 meson _build
 ninja -C _build

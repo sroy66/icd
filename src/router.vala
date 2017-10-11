@@ -7,27 +7,22 @@ using Template;
 
 public class TimeLapse.Router : Valum.Router {
 
-    public TimeLapse.Model model { get; construct; }
-
     private Template.Template index;
 
-    public Router (TimeLapse.Model model) {
-        GLib.Object (model: model);
-    }
-
     construct {
-        /* Templates */
-        index = new Template.Template (new TemplateLocator ());
-        try {
-            index.parse_resource ("/templates/index.tmpl");
-        } catch (GLib.Error e) {
-            error (e.message);
-        }
-
         use (basic ());
-        use (accept ("text/html"));
+        //use (accept ("text/html"));
+
+        use ((req, res, next) => {
+            res.headers.append ("Server", "Cis/1.0");
+            HashTable<string, string>? @params = new HashTable<string, string> (str_hash, str_equal);
+            @params["charset"] = "utf-8";
+            res.headers.set_content_type ("text/html", @params);
+            return next ();
+        });
 
         once ((req, res, next) => {
+            load_templates ();
             return next ();
         });
 
@@ -39,16 +34,23 @@ public class TimeLapse.Router : Valum.Router {
                                              ctx["path"].get_string ());
         }));
 
-/*
- *        var image_router = new ImageRouter (model);
- *        //use (subdomain ("images", image_router.handle));
- *        use (basepath ("/images", image_router.handle));
- *        //rule (Method.GET | Method.POST | Method.PUT | Method.DELETE, "/api/images", image_router.handle);
- *
- *        var camera_router = new CameraRouter (model);
- *        //use (subdomain ("cameras", camera_router.handle));
- *        use (basepath ("/cameras", camera_router.handle));
- */
+        /* XXX Not sure if the subdomain is really necessary for my needs */
+        var image_router = new ImageRouter ();
+        use (subdomain ("images", image_router.handle));
+        use (basepath ("/api/images", image_router.handle));
+
+        var camera_router = new CameraRouter ();
+        use (subdomain ("cameras", camera_router.handle));
+        use (basepath ("/api/cameras", camera_router.handle));
+    }
+
+    private void load_templates () {
+        index = new Template.Template (new TemplateLocator ());
+        try {
+            index.parse_resource ("/templates/index.tmpl");
+        } catch (GLib.Error e) {
+            error (e.message);
+        }
     }
 
     private bool index_cb (Request req, Response res, NextCallback next, Valum.Context ctx)
