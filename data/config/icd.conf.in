@@ -1,0 +1,13 @@
+[general]
+address = 127.0.0.1
+port = 3003
+
+[database]
+reset = true
+host = 127.0.0.1
+port = 3306
+name = icd
+provider = SQLite
+path = /srv/images/
+username = admin
+password = admin

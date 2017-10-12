@@ -1,4 +1,4 @@
-# Time-lapse Microservice
+# Image Capture Service
 
 Use libgphoto2 to capture images using compatible cameras and expose certain
 functionality over a REST API as a service.
@@ -10,9 +10,20 @@ functionality over a REST API as a service.
 ```bash
 sudo dnf install libgphoto2-devel libgee-devel json-glib-devel
 sudo dnf install libgda-devel libgda-sqlite libgda-mysql libgda-postgres
-meson _build
+meson --prefix=/usr --sysconfdir=/etc _build
 ninja -C _build
 sudo ninja -C _build install
+```
+
+### Post Install
+
+Valum doesn't correctly set the library path for the VSGI `.so` files that are
+needed so this is necessary if installing using it using a repository.
+
+```bash
+echo /usr/lib64/vsgi-0.3/servers | \
+  sudo tee /etc/ld.so.conf.d/valum-x86_64.conf >/dev/null
+sudo ldconfig
 ```
 
 ## Running

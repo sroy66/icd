@@ -50,21 +50,25 @@ add_project_arguments([
 dep_glib = dependency('glib-2.0')
 dep_gobject = dependency('gobject-2.0')
 dep_gio = dependency('gio-2.0')
-dep_gee = dependency('gee-0.8')
 dep_gda = dependency('libgda-5.0')
+dep_gee = dependency('gee-0.8')
+dep_gphoto = dependency('libgphoto2')
 dep_json = dependency('json-glib-1.0')
 dep_soup = dependency('libsoup-2.4')
 dep_tmpl = dependency('template-glib-1.0')
 dep_xml = dependency('libxml-2.0')
-dep_vsgi = subproject('valum').get_variable('vsgi')
-dep_valum = subproject('valum').get_variable('valum')
 dep_posix = meson.get_compiler('vala').find_library('posix')
 
-#lib_gphoto = meson.get_compiler('c').find_library('libgphoto2')
-#vapi_gphoto = meson.get_compiler('vala').find_library('libgphoto2', dirs: join_paths(meson.current_source_dir(), 'vapi'))
-#dep_gphoto = declare_dependency(dependecies: [lib_gphoto, vapi_gphoto])
+dep_valum = dependency('valum-0.3', version: '>= 0.3.13', required: false)
+if not dep_valum.found()
+  message('Valum needs to be installed for the installation to work')
+  dep_valum = subproject('valum').get_variable('valum')
+endif
 
-dep_gphoto = dependency('libgphoto2')
+dep_vsgi = dependency('vsgi-0.3', version: '>= 0.3.13', required: false)
+if not dep_vsgi.found()
+  dep_vsgi = subproject('valum').get_variable('vsgi')
+endif
 
 # using template-glib as a subproject failed
 #libtemplate_glib = subproject('template-glib',
@@ -78,21 +82,28 @@ tl_deps = [
   dep_glib,
   dep_gobject,
   dep_gio,
-  dep_gee,
   dep_gda,
+  dep_gee,
+  dep_gphoto,
   dep_json,
   dep_soup,
   dep_tmpl,
   dep_xml,
-  dep_vsgi,
-  dep_valum,
   dep_posix,
-  dep_gphoto,
+  dep_valum,
+  dep_vsgi,
 ]
+
+# Substitutions for various .in files
+subst = configuration_data()
 
 # Installation paths
 pkg_datadir = join_paths(get_option('prefix'), get_option('datadir'), meson.project_name())
-pkg_sysconfdir = join_paths(get_option('prefix'), get_option('sysconfdir'), meson.project_name())
+pkg_sysconfdir = join_paths(get_option('sysconfdir'), meson.project_name())
+
+subst.set('bindir', join_paths(get_option('prefix'), get_option('bindir')))
+subst.set('datadir', pkg_datadir)
+subst.set('sysconfdir', pkg_sysconfdir)
 
 # Create config.h
 conf = configuration_data()
