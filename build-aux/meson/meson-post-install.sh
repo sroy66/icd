@@ -1,3 +1,3 @@
 #!/bin/bash
 
-systemctl enable timelapse
+systemctl enable icd

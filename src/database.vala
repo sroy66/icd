@@ -1,16 +1,16 @@
-public errordomain TimeLapse.DatabaseError {
+public errordomain Icd.DatabaseError {
     EXECUTE_QUERY
 }
 
 /**
  * FIXME Maybe... Don't pull config into this class, use Parameters[] instead (?)
  */
-public class TimeLapse.Database : GLib.Object {
+public class Icd.Database : GLib.Object {
 
     public Gda.Connection conn { get; construct set; }
 
     public Database () {
-        var config = TimeLapse.Config.get_default ();
+        var config = Icd.Config.get_default ();
 
         /* Establish database connection */
         try {

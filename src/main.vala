@@ -1,7 +1,7 @@
-public class TimeLapse.Main : GLib.Object {
+public class Icd.Main : GLib.Object {
 
-	public TimeLapse.App app;
-    public TimeLapse.Config config;
+	public Icd.App app;
+    public Icd.Config config;
 
     private static string? filename;
 
@@ -13,7 +13,7 @@ public class TimeLapse.Main : GLib.Object {
 
     private Main () {
         if (filename != null) {
-            config = TimeLapse.Config.get_default ();
+            config = Icd.Config.get_default ();
             try {
                 config.load_from_file (filename);
                 debug ("Bind to: %s:%d", config.get_address (), config.get_port ());
@@ -24,7 +24,7 @@ public class TimeLapse.Main : GLib.Object {
             }
         }
 
-        app = new TimeLapse.App ();
+        app = new Icd.App ();
     }
 
     private static int main (string[] args) {
@@ -39,7 +39,7 @@ public class TimeLapse.Main : GLib.Object {
             return -1;
         }
 
-        var main = new TimeLapse.Main ();
+        var main = new Icd.Main ();
 
         return main.app.run (args);
     }

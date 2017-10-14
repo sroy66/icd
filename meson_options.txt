@@ -1,1 +1,7 @@
-option('enable-systemd', type: 'boolean', value: false, description: 'setup systemd service')
+option('enable-systemd', type: 'boolean', value: false,
+  description: 'setup systemd service'
+)
+
+option('enable-raml-doc',  type: 'boolean', value: false,
+  description: 'Whether to generate the REST API reference for ICD'
+)

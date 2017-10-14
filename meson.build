@@ -1,4 +1,4 @@
-project('timelapse', [ 'c', 'vala' ],
+project('icd', [ 'c', 'vala' ],
           license: 'GPL3+',
           version: '0.1.0',
     meson_version: '>= 0.40.1',
@@ -15,14 +15,14 @@ MICRO_VERSION = version_split[2]
 
 status = [
   '', '',
-  'Time Lapse Microservice @0@'.format(meson.project_version()),
+  'Image Capture Service @0@'.format(meson.project_version()),
   '', '',
 ]
 
 # Warning message
 if (version_split[1].to_int() % 2 == 1)
   status += [
-    'You are building a debug version of TL. There may be more bugs in',
+    'You are building a debug version of icd. There may be more bugs in',
     'this version that you are comfortable with.',
     '', ''
   ]
@@ -38,7 +38,7 @@ status += [
 ]
 
 add_project_arguments([
-  ['-I' + join_paths(meson.current_source_dir(), 'vapi')]
+  ['-I' + join_paths(meson.current_source_dir(), 'vapi')],
 ], language: 'c')
 
 add_project_arguments([
@@ -78,7 +78,7 @@ endif
 #)
 #dep_tmpl = libtemplate_glib.get_variable('libtemplate_glib_dep')
 
-tl_deps = [
+icd_deps = [
   dep_glib,
   dep_gobject,
   dep_gio,
@@ -101,9 +101,17 @@ subst = configuration_data()
 pkg_datadir = join_paths(get_option('prefix'), get_option('datadir'), meson.project_name())
 pkg_sysconfdir = join_paths(get_option('sysconfdir'), meson.project_name())
 
+# XXX Could only think of this for controlling template loading
+if get_option('buildtype') == 'debug'
+  pkg_templatedir = join_paths(meson.build_root(), 'data', 'templates')
+else
+  pkg_templatedir = join_paths(pkg_datadir, 'templates')
+endif
+
 subst.set('bindir', join_paths(get_option('prefix'), get_option('bindir')))
 subst.set('datadir', pkg_datadir)
 subst.set('sysconfdir', pkg_sysconfdir)
+subst.set('templatedir', pkg_templatedir)
 
 # Create config.h
 conf = configuration_data()
@@ -111,6 +119,11 @@ conf = configuration_data()
 conf.set_quoted('PACKAGE_NAME', meson.project_name())
 conf.set_quoted('PACKAGE_VERSION', meson.project_version())
 conf.set_quoted('PACKAGE_STRING', '@0@-@1@'.format(meson.project_name(), meson.project_version()))
+conf.set_quoted('PACKAGE_URL', 'https://github.com/geoffjay/icd')
+
+conf.set_quoted('DATADIR', pkg_datadir)
+conf.set_quoted('SYSCONFDIR', pkg_sysconfdir)
+conf.set_quoted('TEMPLATEDIR', pkg_templatedir)
 
 # For i18n
 conf.set_quoted('GETTEXT_PACKAGE', meson.project_name())
@@ -121,10 +134,16 @@ configure_file(
   configuration: conf,
 )
 
+# Enable other sections to find config.h
+extra_includes = [
+  include_directories('.'),
+]
+
 gnome = import('gnome')
 
 subdir('src')
 subdir('data')
+subdir('doc')
 subdir('tests')
 
 if get_option('enable-systemd')

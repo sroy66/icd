@@ -1,19 +1,19 @@
-public class TimeLapse.App : GLib.Object {
+public class Icd.App : GLib.Object {
 
-    private TimeLapse.Model model;
-    private TimeLapse.Router router;
+    private Icd.Model model;
+    private Icd.Router router;
     private VSGI.Server server;
 
     public App () {
-        model = TimeLapse.Model.get_default ();
+        model = Icd.Model.get_default ();
         model.init ();
 
-        router = new TimeLapse.Router ();
+        router = new Icd.Router ();
         server = VSGI.Server.@new ("http", handler: router);
     }
 
     public int run (string[] args) {
-        var config = TimeLapse.Config.get_default ();
+        var config = Icd.Config.get_default ();
         string[] _args;
 
         try {

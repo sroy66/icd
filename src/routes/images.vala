@@ -2,7 +2,7 @@ using VSGI;
 using Valum;
 using Valum.ContentNegotiation;
 
-public class TimeLapse.ImageRouter : Valum.Router {
+public class Icd.ImageRouter : Valum.Router {
 
     construct {
         once ((req, res, next) => {
@@ -18,7 +18,7 @@ public class TimeLapse.ImageRouter : Valum.Router {
     private bool view_cb (Request req, Response res, NextCallback next, Context context)
                           throws GLib.Error {
         var id = context["id"];
-        var model = TimeLapse.Model.get_default ();
+        var model = Icd.Model.get_default ();
         if (id == null) {
             var images = model.images.read_all ();
             var generator = new Json.Generator ();
@@ -69,7 +69,7 @@ public class TimeLapse.ImageRouter : Valum.Router {
         switch (content_type) {
             case "application/json":
                 try {
-                    var model = TimeLapse.Model.get_default ();
+                    var model = Icd.Model.get_default ();
                     var image = model.images.read (int.parse (id.get_string ()));
                     var parser = new Json.Parser ();
                     parser.load_from_stream (req.body);
@@ -98,10 +98,10 @@ public class TimeLapse.ImageRouter : Valum.Router {
                 try {
                     var parser = new Json.Parser ();
                     parser.load_from_stream (req.body);
-                    var image = Json.gobject_deserialize (typeof (TimeLapse.Image),
+                    var image = Json.gobject_deserialize (typeof (Icd.Image),
                                                           parser.get_root ());
-                    var model = TimeLapse.Model.get_default ();
-                    model.images.create ((TimeLapse.Image) image);
+                    var model = Icd.Model.get_default ();
+                    model.images.create ((Icd.Image) image);
                 } catch (GLib.Error e) {
                     throw new ClientError.BAD_REQUEST (
                         "Invalid or malformed JSON was provided");
@@ -118,7 +118,7 @@ public class TimeLapse.ImageRouter : Valum.Router {
     private bool delete_cb (Request req, Response res, NextCallback next, Context context)
                             throws GLib.Error{
         var id = context["id"];
-        var model = TimeLapse.Model.get_default ();
+        var model = Icd.Model.get_default ();
         if (id != null) {
             model.images.delete (int.parse (id.get_string ()));
         } else {

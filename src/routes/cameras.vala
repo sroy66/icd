@@ -2,7 +2,7 @@ using GPhoto;
 using VSGI;
 using Valum;
 
-public class TimeLapse.CameraRouter : Valum.Router {
+public class Icd.CameraRouter : Valum.Router {
 
     private GPhoto.Camera camera;
     private GPhoto.Context gp_context;

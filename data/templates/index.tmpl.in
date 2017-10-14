@@ -1,0 +1,10 @@
+<!DOCTYPE html>
+<html lang="en">
+  {{include "@templatedir@/header.tmpl"}}
+  <body>
+    {{include "@templatedir@/nav.tmpl"}}
+    <div class="main container-fluid">
+    </div>
+    {{include "@templatedir@/footer.tmpl"}}
+  </body>
+</html>

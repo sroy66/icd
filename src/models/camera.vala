@@ -1,4 +1,4 @@
-public class TimeLapse.Camera : GLib.Object {
+public class Icd.Camera : GLib.Object {
 
     [Description(nick = "primary_key")]
     public int id { get; construct set; }

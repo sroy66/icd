@@ -5,7 +5,7 @@ AssertPathExists=@sysconfdir@
 [Service]
 #User=pi
 #Group=pi
-ExecStart=@bindir@/timelapse --config @sysconfdir@/config.ini
+ExecStart=@bindir@/icd --config @sysconfdir@/config.ini
 
 [Install]
 WantedBy=default.target

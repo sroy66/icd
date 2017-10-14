@@ -3,5 +3,5 @@
 This is all untested.
 
 ```bash
-systemctl enable timelapse
+systemctl enable icd
 ```

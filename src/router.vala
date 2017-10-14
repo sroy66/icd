@@ -5,16 +5,18 @@ using Valum.Static;
 using Valum.ContentNegotiation;
 using Template;
 
-public class TimeLapse.Router : Valum.Router {
+public class Icd.Router : Valum.Router {
 
     private Template.Template index;
+    private Template.Template images;
+    private Template.Template cameras;
+    private Template.TemplateLocator locator;
 
     construct {
         use (basic ());
-        //use (accept ("text/html"));
 
         use ((req, res, next) => {
-            res.headers.append ("Server", "Cis/1.0");
+            res.headers.append ("Server", "Icd/1.0");
             HashTable<string, string>? @params = new HashTable<string, string> (str_hash, str_equal);
             @params["charset"] = "utf-8";
             res.headers.set_content_type ("text/html", @params);
@@ -28,6 +30,8 @@ public class TimeLapse.Router : Valum.Router {
 
         /* Routes */
         get ("/", index_cb);
+        get ("/images", images_cb);
+        get ("/cameras", cameras_cb);
         get ("/static/<path:path>", sequence (serve_from_file (File.new_for_path ("src/static")),
                                               (req, res, next, ctx) => {
             throw new ClientError.NOT_FOUND ("The static resource '%s' were not found.",
@@ -45,17 +49,44 @@ public class TimeLapse.Router : Valum.Router {
     }
 
     private void load_templates () {
-        index = new Template.Template (new TemplateLocator ());
+        locator = new TemplateLocator ();
+        locator.append_search_path (Icd.TEMPLATEDIR);
+        locator.append_search_path ("/templates");
+
+        index = new Template.Template (locator);
+        images = new Template.Template (locator);
+        cameras = new Template.Template (locator);
+
         try {
-            index.parse_resource ("/templates/index.tmpl");
+            index.parse_file (File.new_for_path (Path.build_filename (Icd.TEMPLATEDIR, "index.tmpl")));
+            images.parse_file (File.new_for_path (Path.build_filename (Icd.TEMPLATEDIR, "images.tmpl")));
+            cameras.parse_file (File.new_for_path (Path.build_filename (Icd.TEMPLATEDIR, "cameras.tmpl")));
         } catch (GLib.Error e) {
             error (e.message);
         }
+
+        /* FIXME Would like to be able to load templates as resources but includes fail */
+        /*
+         *var res_tmpl = new Template.Template (locator);
+         *res_tmpl.parse_resource ("/templates/index.tmpl");
+         */
     }
 
     private bool index_cb (Request req, Response res, NextCallback next, Valum.Context ctx)
-                                 throws GLib.Error {
+                           throws GLib.Error {
         var scope = new Scope ();
         return index.expand (res.body, scope);
+    }
+
+    private bool images_cb (Request req, Response res, NextCallback next, Valum.Context ctx)
+                            throws GLib.Error {
+        var scope = new Scope ();
+        return images.expand (res.body, scope);
+    }
+
+    private bool cameras_cb (Request req, Response res, NextCallback next, Valum.Context ctx)
+                             throws GLib.Error {
+        var scope = new Scope ();
+        return cameras.expand (res.body, scope);
     }
 }

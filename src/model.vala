@@ -1,41 +1,41 @@
-public class TimeLapse.Model : GLib.Object {
+public class Icd.Model : GLib.Object {
 
     /* FIXME Put all database related stuff into this database object */
-    private TimeLapse.Database db;
+    private Icd.Database db;
 
-    private static Once<TimeLapse.Model> _instance;
+    private static Once<Icd.Model> _instance;
 
     /* Object repositories */
-    public Repository<TimeLapse.Camera?> cameras { get; construct set; }
-    public Repository<TimeLapse.Image?> images { get; construct set; }
+    public Repository<Icd.Camera?> cameras { get; construct set; }
+    public Repository<Icd.Image?> images { get; construct set; }
 
     /**
      * @return Singleton for the Config class
      */
-    public static unowned TimeLapse.Model get_default () {
-        return _instance.once (() => { return new TimeLapse.Model (); });
+    public static unowned Icd.Model get_default () {
+        return _instance.once (() => { return new Icd.Model (); });
     }
 
     public void init () {
-        db = new TimeLapse.Database ();
+        db = new Icd.Database ();
 
         /* Create object repositories */
-        cameras = new Repository<TimeLapse.Camera?> (db);
-        images = new Repository<TimeLapse.Image?> (db);
+        cameras = new Repository<Icd.Camera?> (db);
+        images = new Repository<Icd.Image?> (db);
     }
 
     public class Repository<T> : GLib.Object {
 
-        private TimeLapse.Database db;
+        private Icd.Database db;
         protected string name;
 
-        public Repository (TimeLapse.Database db) {
+        public Repository (Icd.Database db) {
             this.db = db;
             debug ("Created repository for %s objects", typeof (T).name ());
             /* FIXME This could be (more) generic */
-            if (typeof (T).is_a (typeof (TimeLapse.Image))) {
+            if (typeof (T).is_a (typeof (Icd.Image))) {
                 name = "images";
-            } else if (typeof (T).is_a (typeof (TimeLapse.Camera))) {
+            } else if (typeof (T).is_a (typeof (Icd.Camera))) {
                 name = "cameras";
             }
 
@@ -111,14 +111,14 @@ public class TimeLapse.Model : GLib.Object {
     /**
      * XXX This is currently just here to test overriding methods from base
      */
-    public class ImageRepository : Repository<TimeLapse.Image?> {
+    public class ImageRepository : Repository<Icd.Image?> {
 
-        public ImageRepository (TimeLapse.Database db) {
+        public ImageRepository (Icd.Database db) {
             base (db);
             name = "images";
         }
 
-        public override TimeLapse.Image? read (int id) {
+        public override Icd.Image? read (int id) {
             return null;
         }
     }

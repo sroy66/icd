@@ -1,4 +1,4 @@
-test_deps = tl_deps + [ tl ]
+test_deps = icd_deps + [ icd ]
 
 test('router',
   executable('images-test', 'images-test.vala',

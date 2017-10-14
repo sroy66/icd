@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gresources>
+  <!-- XXX Moved these to data/templates/* until fix for resource loading
+     -<gresource>
+     -  <file compressed="true">templates/index.tmpl</file>
+     -  <file compressed="true">templates/header.tmpl</file>
+     -  <file compressed="true">templates/nav.tmpl</file>
+     -  <file compressed="true">templates/footer.tmpl</file>
+     -</gresource>
+     -->
+  <gresource prefix="/static">
+    <file compressed="true" alias="styles/layout.css">static/styles/layout.css</file>
+    <file alias="images/logo.png">static/images/logo.png</file>
+  </gresource>
+</gresources>

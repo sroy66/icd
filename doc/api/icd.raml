@@ -6,7 +6,7 @@
 #  response codes: https://httpstatuses.com/
 #      async jobs: https://farazdagi.com/2014/rest-and-long-running-jobs
 
-title: TimeLapse
+title: ICD
 version: v1
 baseUri: http://{ipAddress}/{version}
 baseUriParameters:
@@ -18,7 +18,7 @@ types:
     type: object
     properties:
       filename: string
-      timestamp: string
+      timestamp: number
       width?: number
       height?: number
       data?:
@@ -29,17 +29,20 @@ types:
     items: Image
     minItems: 0
     uniqueItems: true
-    example:
-      - # start item 1
-        filename: image-file-01.png
-        timestamp: 1505342124
-        width: 1920
-        height: 1080
-      - # start item 2
-        filename: image-file-02.png
-        timestamp: 1505342130
-        width: 1920
-        height: 1080
+    example: |
+      [
+        {
+          "filename": "image-file-01.png",
+          "timestamp": 1505342124,
+          "width": 1920,
+          "height": 1080
+        },{
+          "filename": "image-file-02.png",
+          "timestamp": 1505342130,
+          "width": 1920,
+          "height": 1080
+        }
+      ]
   Capture:
     type: object
     properties:
@@ -92,13 +95,16 @@ types:
     items: Setting
     minItems: 0
     uniqueItems: true
-    example:
-      -
-        key: ISO
-        value: 4000
-      -
-        key: Exposure
-        value: 0.2s
+    example: |
+      [
+        {
+          "key": "ISO",
+          "value": "4000"
+        },{
+          "key": "Exposure",
+          "value": "0.2s"
+        }
+      ]
   Job:
     type: object
     properties:

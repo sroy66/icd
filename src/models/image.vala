@@ -1,4 +1,4 @@
-public class TimeLapse.Image : GLib.Object {
+public class Icd.Image : GLib.Object {
 
     [Description(nick = "primary_key")]
     public int id { get; construct set; }

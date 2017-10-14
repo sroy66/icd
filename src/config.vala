@@ -15,10 +15,10 @@
  * password = nonsense
  * }}}
  */
-public class TimeLapse.Config : GLib.Object {
+public class Icd.Config : GLib.Object {
 
     private GLib.KeyFile file;
-    private static Once<TimeLapse.Config> _instance;
+    private static Once<Icd.Config> _instance;
 
     /* [general] backing fields */
     private string address = "127.0.0.1";
@@ -40,8 +40,8 @@ public class TimeLapse.Config : GLib.Object {
     /**
      * @return Singleton for the Config class
      */
-    public static unowned TimeLapse.Config get_default () {
-        return _instance.once (() => { return new TimeLapse.Config (); });
+    public static unowned Icd.Config get_default () {
+        return _instance.once (() => { return new Icd.Config (); });
     }
 
     public void load_from_file (string filename) throws GLib.Error {

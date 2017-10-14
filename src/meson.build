@@ -1,9 +1,16 @@
-tl_resources = gnome.compile_resources('timelapse-resources',
-  'timelapse.gresource.xml',
-  c_name: 'timelapse',
+subdir('config')
+
+icd_resources = gnome.compile_resources('icd-resources',
+  'icd.gresource.xml',
+  c_name: 'icd',
 )
 
-tl_sources = [
+icd_vala_args = [
+  '--vapidir', dir_libconfig,
+  '--pkg', 'icd-config',
+]
+
+icd_sources = [
   'config.vala',
   'database.vala',
   'model.vala',
@@ -14,22 +21,27 @@ tl_sources = [
   'routes/images.vala',
 ]
 
-tl_app_sources = [
+icd_app_sources = [
   'app.vala',
   'main.vala',
 ]
 
-tl_lib = library('tl', tl_sources,
-  dependencies: tl_deps,
-   vala_header: 'tl.h',
+icd_deps += link_libconfig
+
+icd_lib = library(meson.project_name(), icd_sources,
+  dependencies: icd_deps,
+   vala_header: 'icd.h',
+     vala_args: icd_vala_args,
        install: false,
 )
 
-executable('tl', tl_resources + tl_sources + tl_app_sources,
+executable(meson.project_name(), icd_resources + icd_sources + icd_app_sources,
+  dependencies: icd_deps,
+     vala_args: icd_vala_args,
        install: true,
-  dependencies: tl_deps,
 )
 
-tl = declare_dependency(include_directories: include_directories('.'),
-  link_with: tl_lib,
+icd = declare_dependency(
+  include_directories: include_directories('.'),
+            link_with: icd_lib,
 )
