@@ -17,8 +17,10 @@ icd_sources = [
   'router.vala',
   'models/camera.vala',
   'models/image.vala',
+  'models/job.vala',
   'routes/cameras.vala',
   'routes/images.vala',
+  'routes/jobs.vala',
 ]
 
 icd_app_sources = [

@@ -46,6 +46,10 @@ public class Icd.Router : Valum.Router {
         var camera_router = new CameraRouter ();
         use (subdomain ("cameras", camera_router.handle));
         use (basepath ("/api/cameras", camera_router.handle));
+
+        var job_router = new JobRouter ();
+        use (subdomain ("jobs", job_router.handle));
+        use (basepath ("/api/jobs", job_router.handle));
     }
 
     private void load_templates () {

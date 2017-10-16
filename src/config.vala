@@ -26,7 +26,7 @@ public class Icd.Config : GLib.Object {
 
     /* [database] backing fields */
     private string db_host = "127.0.0.1";
-    private int db_port = 3360;
+    private int db_port = 3306;
     private string db_name = Environment.get_application_name ();
     private string db_provider = "SQLite";
     private string db_path = ".";

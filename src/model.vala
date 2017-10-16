@@ -8,6 +8,7 @@ public class Icd.Model : GLib.Object {
     /* Object repositories */
     public Repository<Icd.Camera?> cameras { get; construct set; }
     public Repository<Icd.Image?> images { get; construct set; }
+    public Repository<Icd.Job?> jobs { get; construct set; }
 
     /**
      * @return Singleton for the Config class
@@ -22,6 +23,7 @@ public class Icd.Model : GLib.Object {
         /* Create object repositories */
         cameras = new Repository<Icd.Camera?> (db);
         images = new Repository<Icd.Image?> (db);
+        jobs = new Repository<Icd.Job?> (db);
     }
 
     public class Repository<T> : GLib.Object {
@@ -37,9 +39,15 @@ public class Icd.Model : GLib.Object {
                 name = "images";
             } else if (typeof (T).is_a (typeof (Icd.Camera))) {
                 name = "cameras";
+            } else if (typeof (T).is_a (typeof (Icd.Job))) {
+                name = "jobs";
             }
 
-            db.delete_table (name);
+            var config = Icd.Config.get_default ();
+
+            if (config.get_db_reset ()) {
+                db.delete_table (name);
+            }
             db.create_table (name, typeof (T));
         }
 
