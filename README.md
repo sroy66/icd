@@ -3,28 +3,26 @@
 Use libgphoto2 to capture images using compatible cameras and expose certain
 functionality over a REST API as a service.
 
-## Dependencies
-
-* pip3
-* cmake
-* valac
-* flex
-* bison
-
-### Fedora 24/25/26
-
-```bash
-sudo dnf install libgphoto2-devel libgee-devel json-glib-devel
-sudo dnf install libgda-devel libgda-sqlite libgda-mysql libgda-postgres
-```
-
-### RaspberryPi
-
-```bash
-sudo apt-get install libxml2-utils libsoup2.4-dev libgirepository1.0-dev libgphoto2-dev
-```
-
 ## Setup
+
+### Fedora
+
+```bash
+sudo dnf install python-pip3 cmake valac flex bison gettext \
+    libgphoto2-devel libgee-devel json-glib-devel libgda-devel libgda-sqlite \
+    libgda-mysql libgda-postgres libsoup2.4-devel libxml2-devel openssl-devel \
+    libxml2-devel glib2-devel
+```
+
+### Debian/Ubuntu
+
+```bash
+sudo apt-get install python3-pip cmake valac flex bison gettext \
+    libgda-5.0-dev libgee-0.8-dev libgirepository1.0-dev libglib2.0-dev \
+    libgphoto2-dev libjson-glib-dev libsoup2.4-dev libssl-dev libxml2-utils
+```
+
+## Common
 
 ```bash
 sudo pip3 install scikit-build
@@ -38,7 +36,7 @@ sudo udevadm trigger
 # would have liked to have template-glib as subproject but that requires more effort
 git clone https://github.com/chergert/template-glib.git
 cd template-glib
-meson --prefix=/usr _build
+meson --prefix=/usr --buildtype=release _build
 ninja -C _build
 sudo ninja -C _build install
 ```
@@ -62,6 +60,17 @@ this is necessary to execute `icd` once installed.
 echo /usr/lib64/vsgi-0.3/servers | \
   sudo tee /etc/ld.so.conf.d/valum-x86_64.conf >/dev/null
 sudo ldconfig
+```
+
+## Docker
+
+Build and run the application using `Docker`, this currently does not explain
+how to connect to cameras that are connected to the host.
+
+```bash
+# XXX just for testing
+docker build -t icd .
+docker run --rm -it -p 3003:3003 icd
 ```
 
 ## Running

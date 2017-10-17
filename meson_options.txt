@@ -5,3 +5,7 @@ option('enable-systemd', type: 'boolean', value: false,
 option('enable-raml-doc',  type: 'boolean', value: false,
   description: 'Whether to generate the REST API reference for ICD'
 )
+
+option('enable-tests', type: 'boolean', value: true,
+  description: 'Whether to compile unit tests'
+)

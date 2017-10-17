@@ -1,0 +1,11 @@
+*.*~
+*.swp
+
+Dockerfile
+
+.git/
+_build/
+subprojects/valum/
+subprojects/template-glib/
+
+doc/**/*.html
