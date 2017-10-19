@@ -152,6 +152,7 @@ public class Icd.Database : GLib.Object {
      * FIXME Needs to return a record set
      * FIXME This should be a generic Type select with ID (?)
      * FIXME Make the ID field a generic (?)
+     * FIXME Read only properties can not be set in the returned object
      */
     public T[] select<T> (string table, Value? id = null) throws GLib.Error {
         try {
@@ -178,17 +179,14 @@ public class Icd.Database : GLib.Object {
 
             for (int i = 0; i < dm.get_n_rows (); i++) {
                 var obj = Object.@new (typeof (T));
-
                 for (int j = 0; j < dm.get_n_columns (); j++) {
                     var col = dm.get_column_name (j);
                     var val = dm.get_value_at (j, i);
                     unowned ParamSpec? spec = ocl.find_property (col);
-
                     if (spec == null) {
                         throw new DatabaseError.EXECUTE_QUERY (
                             "The query returned an invalid object definition");
                     }
-
                     if (spec.get_blurb () == "blob") {
                         debug ("Not doing anything with blobs yet");
                     } else {
@@ -218,7 +216,7 @@ public class Icd.Database : GLib.Object {
         }
     }
 
-    public void insert<T> (string table, T object) throws GLib.Error {
+    public void insert<T> (string table, T object, out Value id) throws GLib.Error {
         try {
             var sql = "INSERT INTO %s".printf (table);
             string[] columns = {};
@@ -276,6 +274,11 @@ public class Icd.Database : GLib.Object {
             }
             sql += ")";
             conn.execute_non_select_command (sql);
+
+            /* get the id */
+            sql = "SELECT COUNT (*) FROM %s".printf (table);
+            var dm = conn.execute_select_command (sql);
+            id = dm.get_value_at (0, 0);
         } catch (GLib.Error e) {
             throw new DatabaseError.EXECUTE_QUERY (
                 "Error creating '%s' record: %s", table, e.message);
@@ -321,6 +324,7 @@ public class Icd.Database : GLib.Object {
         try {
             var sql = "DELETE FROM %s".printf (table);
             sql += (id == null) ? "" : " WHERE id = %d".printf (id.get_int ());
+            /*debug (sql);*/
             conn.execute_non_select_command (sql);
         } catch (GLib.Error e) {
             throw new DatabaseError.EXECUTE_QUERY (

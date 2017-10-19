@@ -1,5 +1,6 @@
 *.*~
 *.swp
+*.c
 
 _build/
 subprojects/valum/

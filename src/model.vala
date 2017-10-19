@@ -51,12 +51,19 @@ public class Icd.Model : GLib.Object {
             db.create_table (name, typeof (T));
         }
 
-        public virtual void create (T object) {
+        /**
+         * @return The id which is also the primary key value from the database
+         */
+        public virtual int create (T object) {
+            Value id;
             try {
-                db.insert (name, object);
+                db.insert (name, object, out id);
+                /*debug ("id: %d", id.get_int ());*/
             } catch (GLib.Error e) {
                 critical (e.message);
             }
+
+            return id.get_int ();
         }
 
         public virtual T? read (int id) {
@@ -101,6 +108,7 @@ public class Icd.Model : GLib.Object {
             try {
                 var val_id = Value (typeof (int));
                 val_id.set_int (id);
+                /*debug ("%d %d", id, val_id.get_int ());*/
                 db.delete (name, val_id);
             } catch (GLib.Error e) {
                 critical (e.message);

@@ -11,7 +11,17 @@ public class Icd.Image : GLib.Object {
 
     public int height { get; set; }
 
+    [Description(nick="image_data", blurb="blob")]
+    public uint8[] data { get; set; }
+
     public signal void changed (int id, string property);
+
+    public Image.full (string name, long timestamp, int width, int height) {
+        this.name = name;
+        this.timestamp = timestamp;
+        this.width = width;
+        this.height = height;
+    }
 
     public string to_string () {
         string str = "{ \"id\": %d, \"name\": \"%s\", \"timestamp\": %ld, \"width\": %d, \"height\": %d}".printf (
