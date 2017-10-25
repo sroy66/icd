@@ -1,0 +1,9 @@
+version: '3'
+services:
+  web:
+    privileged: true
+    build: .
+    ports:
+     - "3003:3003"
+    volumes:
+     - /dev/bus/usb:/dev/bus/usb

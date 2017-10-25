@@ -3,6 +3,8 @@
 Use libgphoto2 to capture images using compatible cameras and expose certain
 functionality over a REST API as a service.
 
+The API is generated from RAML and can be viewed [here](doc/api/API.md).
+
 ## Setup
 
 ### Fedora
@@ -22,23 +24,38 @@ sudo apt-get install python3-pip cmake valac flex bison gettext \
     libgphoto2-dev libjson-glib-dev libsoup2.4-dev libssl-dev libxml2-utils
 ```
 
-## Common
+### Common
+
+A couple of the build dependencies are added to this repository as `meson`
+subprojects and during testing it isn't necessary to install them.
 
 ```bash
 sudo pip3 install scikit-build
 sudo pip3 install meson ninja
-# probably need to fix USB device permissions, this example is just for the
-# camera used during development
-echo 'SUBSYSTEM=="usb", ATTR{idVendor}=="04a9", ATTR{idProduct}=="3218", MODE="0666"' | \
-sudo tee /etc/udev/rules.d/50-canon.rules >/dev/null
-sudo udevadm control --reload
-sudo udevadm trigger
-# would have liked to have template-glib as subproject but that requires more effort
 git clone https://github.com/chergert/template-glib.git
 cd template-glib
+meson --prefix=/usr _build
+ninja -C _build
+sudo ninja -C _build install
+cd ..
+git clone https://github.com/valum-framework/valum.git
+cd valum
 meson --prefix=/usr --buildtype=release _build
 ninja -C _build
 sudo ninja -C _build install
+```
+
+### Cameras
+
+USB cameras need to have the permissions changed, possibly just if the settings
+will be changed. The example `udev` rule below is for a Canon camera that was
+used during development.
+
+```bash
+echo 'SUBSYSTEM=="usb", ATTR{idVendor}=="04a9", ATTR{idProduct}=="3218", MODE="0666"' | \
+    sudo tee /etc/udev/rules.d/50-canon.rules >/dev/null
+sudo udevadm control --reload
+sudo udevadm trigger
 ```
 
 ## Build/Install
@@ -46,7 +63,13 @@ sudo ninja -C _build install
 ```bash
 git clone git@github.com:geoffjay/icd.git icd
 cd icd
+# During development
+meson _build
+ninja -C _build
+# or
+# For deployment
 meson --prefix=/usr --sysconfdir=/etc --buildtype=plain _build
+meson configure -Denable-systemd=true _build
 ninja -C _build
 sudo ninja -C _build install
 ```
@@ -64,14 +87,22 @@ sudo ldconfig
 
 ## Docker
 
-Build and run the application using `Docker`, this currently does not explain
-how to connect to cameras that are connected to the host.
+Build and run the application using `Docker`.
 
 ```bash
-# XXX just for testing
 docker build -t icd .
-docker run --rm -it -p 3003:3003 icd
+docker run --rm -it --privileged -v /dev/bus/usb:/dev/bus/usb -p 3003:3003 icd
 ```
+
+Or with Docker Compose.
+
+```bash
+docker-compose up
+```
+
+This will put the database for the application in `/usr/share/icd`. This can be
+changed by editing the configuration file in `data/config` to point at a
+different volume that is mapped in a similar way as is done with the USB bus.
 
 ## Running
 
