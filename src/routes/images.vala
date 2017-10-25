@@ -9,7 +9,8 @@ public class Icd.ImageRouter : Valum.Router {
             return next ();
         });
 
-        rule (Method.GET,    "/(<int:id>)?", view_cb);
+        /*rule (Method.GET,    "/(<int:id>)?", view_cb);*/
+        rule (Method.GET,    "/(<int:id>)?(/<action>)?", view_cb);
         rule (Method.PUT,    "/<int:id>",    accept ("application/json", edit_cb));
         rule (Method.POST,   "/",            accept ("application/json", create_cb));
         rule (Method.DELETE, "/(<int:id>)?", delete_cb);
@@ -18,6 +19,8 @@ public class Icd.ImageRouter : Valum.Router {
     private bool view_cb (Request req, Response res, NextCallback next, Context context)
                           throws GLib.Error {
         var id = context["id"];
+        var action = context["action"].get_string ();
+        debug ("action: %s", action);
         var model = Icd.Model.get_default ();
         if (id == null) {
             var images = model.images.read_all ();
@@ -47,8 +50,25 @@ public class Icd.ImageRouter : Valum.Router {
             var image = model.images.read (int.parse (id.get_string ()));
             var generator = new Json.Generator ();
             if (image != null) {
+                switch (action) {
+                    case "all":
+                        generator.root = Json.gobject_serialize (image);
+                        break;
+                    case "info":
+                        Json.Object object = new Json.Object ();
+                        object.set_int_member ("id", image.id);
+                        object.set_string_member ("name", image.name);
+                        object.set_int_member ("width", image.width);
+                        object.set_int_member ("height", image.height);
+                        Json.Node node = new Json.Node (Json.NodeType.OBJECT);
+                        node.set_object (object);
+                        generator.root = node;
+                        break;
+                    default:
+                        break;
+                }
+
                 res.headers.set_content_type ("application/json", null);
-                generator.root = Json.gobject_serialize (image);
                 generator.pretty = false;
                 return generator.to_stream (res.body);
             } else {

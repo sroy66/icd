@@ -37,11 +37,12 @@ public class Icd.Camera : GLib.Object {
     }
 
     /* FIXME cature should return an Icd.Image */
-    public uint8[] capture ()
+    public Image capture ()
                             throws GLib.Error {
         Result ret;
         CameraFile file = null;
         CameraFilePath path;
+        Image image = null;
 
         string tmpname = "tmpfileXXXXXX";
         int fd = -1;
@@ -69,7 +70,7 @@ public class Icd.Camera : GLib.Object {
                     critical (ret.to_full_string ());
                 } else {
                     /*
-                     *
+                     * FIXME get timestamp, width, length..
                      *CameraFileInfo info;
                      *ret = camera.get_file_info ((string) path.folder,
                      *                            file,
@@ -85,24 +86,21 @@ public class Icd.Camera : GLib.Object {
             }
         }
 
-        var result = data_from_file (file);
+        uint8* data;
+        ulong data_len;
+        ret = file.get_data_and_size (out data, out data_len);
+        Icd.Blob blob = new Icd.Blob ();
+        blob.data = data;
+        blob.length = data_len;
+        debug ("image data length: %lu %lu", data_len, blob.length);
+        if ( ret != Result.OK) {
+            critical (ret.to_full_string ());
+        } else {
+        /* FIXME only the data property is being set for now */
+            image = new Image.full ("name", 0, -1, -1, blob);
+        }
         FileUtils.close (fd);
         FileUtils.unlink (tmpname);
-        return result;
-    }
-
-    private uint8[] data_from_file (CameraFile file) {
-        Result ret;
-        uint8* data;
-        uint8[] ary = null;
-        ulong data_len;
-
-        ret = file.get_data_and_size (out data, out data_len);
-        ary = new uint8[data_len];
-        for (int i = 0; i < data_len; i++) {
-            ary[i] = *(data + i);
-        }
-        /*debug ("data.length: %d", ary.length);*/
-        return ary;
+        return image;
     }
 }

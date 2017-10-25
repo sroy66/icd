@@ -100,7 +100,7 @@ public class Icd.JobRouter : Valum.Router {
                     /*debug ("id: %d count: %d interval: %d", job.id, job.count, job.interval);*/
                     var model = Icd.Model.get_default ();
                     job.id = model.jobs.create (job);
-					job.run ();
+					job.run.begin ();
                 } catch (GLib.Error e) {
                     throw new ClientError.BAD_REQUEST (
                         "Invalid or malformed JSON was provided");

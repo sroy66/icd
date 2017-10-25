@@ -1,5 +1,8 @@
+using Gda;
+
 public errordomain Icd.DatabaseError {
-    EXECUTE_QUERY
+    EXECUTE_QUERY,
+    PARSE
 }
 
 /**
@@ -7,10 +10,15 @@ public errordomain Icd.DatabaseError {
  */
 public class Icd.Database : GLib.Object {
 
-    public Gda.Connection conn { get; construct set; }
+    public Connection conn { get; construct set; }
+    private SqlBuilder builder;
+    private Statement stmt;
+    private SqlParser parser;
+    private Set out_params;
 
     public Database () {
         var config = Icd.Config.get_default ();
+        parser = new SqlParser ();
 
         /* Establish database connection */
         try {
@@ -217,8 +225,10 @@ public class Icd.Database : GLib.Object {
     }
 
     public void insert<T> (string table, T object, out Value id) throws GLib.Error {
+        builder = new SqlBuilder (SqlStatementType.INSERT);
+        builder.set_table (table);
         try {
-            var sql = "INSERT INTO %s".printf (table);
+            /*var sql = "INSERT INTO %s".printf (table);*/
             string[] columns = {};
             var ocl = (ObjectClass) typeof (T).class_ref ();
 
@@ -228,57 +238,58 @@ public class Icd.Database : GLib.Object {
                 }
             }
 
-            sql += " (";
-            for (int i = 0; i < columns.length; i++) {
-                sql += columns[i];
-                if (i != columns.length - 1) {
-                    sql += ", ";
-                }
-            }
-            sql += ") VALUES (";
             /* FIXME See update for example that doesn't do this nonsense */
             for (int i = 0; i < columns.length; i++) {
                 unowned ParamSpec? spec = ocl.find_property (columns[i]);
                 if (spec.value_type == typeof (string)) {
                     string val;
                     ((Object) object).get (columns[i], out val);
-                    sql += "\"%s\"".printf (val);
+                    builder.add_field_value_as_gvalue (columns[i], val);
                 } else if (spec.value_type == typeof (bool)) {
                     bool val;
                     ((Object) object).get (columns[i], out val);
-                    sql += "%s".printf (val.to_string ());
+                    builder.add_field_value_as_gvalue (columns[i], val);
                 } else if (spec.value_type == typeof (int)) {
                     int val;
                     ((Object) object).get (columns[i], out val);
-                    sql += "%s".printf (val.to_string ());
+                    builder.add_field_value_as_gvalue (columns[i], val);
                 } else if (spec.value_type == typeof (long)) {
                     long val;
                     ((Object) object).get (columns[i], out val);
-                    sql += "%s".printf (val.to_string ());
+                    builder.add_field_value_as_gvalue (columns[i], val);
                 } else if (spec.value_type == typeof (float)) {
                     float val;
                     ((Object) object).get (columns[i], out val);
-                    sql += "%s".printf (val.to_string ());
+                    builder.add_field_value_as_gvalue (columns[i], val);
                 } else if (spec.value_type == typeof (double)) {
                     double val;
                     ((Object) object).get (columns[i], out val);
-                    sql += "%s".printf (val.to_string ());
-                } else {
-                    if (spec.get_blurb () == "blob") {
-                        debug ("Not doing anything with blobs yet");
-                    }
-                }
-                if (i != columns.length - 1) {
-                    sql += ", ";
+                    builder.add_field_value_as_gvalue (columns[i], val);
+                } else if (spec.get_blurb () == "blob") {
+                    Icd.Blob blob;
+                    string val;
+                    ((Object) object).get (columns[i], out blob);
+                    debug ("blob: %lu", blob.length);
+                    val = Base64.encode (blob.to_array ());
+                    builder.add_field_value_as_gvalue (columns[i], val);
                 }
             }
-            sql += ")";
-            conn.execute_non_select_command (sql);
 
-            /* get the id */
-            sql = "SELECT COUNT (*) FROM %s".printf (table);
+            try {
+                Set last_insert_row;
+                stmt = builder.get_statement ();
+                stmt.get_parameters (out out_params);
+                conn.statement_execute_non_select (stmt, out_params, out last_insert_row);
+            } catch (Error e) {
+                critical (e.message);
+            }
+
+             /*get the id*/
+            string sql = "SELECT COUNT (*) FROM %s".printf (table);
+            debug ("SQL: [%s]", sql);
             var dm = conn.execute_select_command (sql);
             id = dm.get_value_at (0, 0);
+            debug ("id: %d", id.get_int ());
         } catch (GLib.Error e) {
             throw new DatabaseError.EXECUTE_QUERY (
                 "Error creating '%s' record: %s", table, e.message);

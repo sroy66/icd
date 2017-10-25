@@ -25,14 +25,16 @@ public class Icd.Job : GLib.Object {
 
     public async void run () {
         var camera = new Icd.Camera ();
-        uint8[] data;
         var model = Icd.Model.get_default ();
 
         running = true;
         while (running) {
             for (int i = 0; i < count; i++) {
                 try {
-                    data = camera.capture ();
+                    /* take a picture and save the image in the database */
+                    var image = camera.capture ();
+                    debug ("image length: %lu", image.data.length);
+                    model.images.create (image);
                     yield nap (interval); //FIXME This is not accurate. Use a thread.
                 } catch (GLib.Error e) {
                     critical ("GLib.Error: %s", e.message);

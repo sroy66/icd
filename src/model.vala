@@ -45,10 +45,14 @@ public class Icd.Model : GLib.Object {
 
             var config = Icd.Config.get_default ();
 
-            if (config.get_db_reset ()) {
-                db.delete_table (name);
+            try {
+                if (config.get_db_reset ()) {
+                    db.delete_table (name);
+                }
+                db.create_table (name, typeof (T));
+            } catch (Error e) {
+                critical ("Error: %s", e.message);
             }
-            db.create_table (name, typeof (T));
         }
 
         /**
