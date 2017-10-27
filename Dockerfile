@@ -30,9 +30,9 @@ ADD https://github.com/ninja-build/ninja/releases/download/v1.6.0/ninja-linux.zi
 RUN unzip /tmp/ninja-linux.zip -d /usr/local/bin
 
 # Template-GLib
-ADD https://github.com/chergert/template-glib/archive/3.26.0.tar.gz /tmp
-RUN tar zxf /tmp/3.26.0.tar.gz -C /tmp
-WORKDIR /tmp/template-glib-3.26.0
+ADD https://github.com/chergert/template-glib/archive/3.25.92.tar.gz /tmp
+RUN tar zxf /tmp/3.25.92.tar.gz -C /tmp
+WORKDIR /tmp/template-glib-3.25.92
 RUN meson --prefix=/usr _build
 RUN ninja -C _build && ninja -C _build install
 

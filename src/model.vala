@@ -70,12 +70,12 @@ public class Icd.Model : GLib.Object {
             return id.get_int ();
         }
 
-        public virtual T? read (int id) {
+        public virtual T? read (int id, bool exclude_blobs = true) {
             T[] records;
             try {
                 var val_id = Value (typeof (int));
                 val_id.set_int (id);
-                records = db.select (name, val_id);
+                records = db.select (name, val_id, exclude_blobs);
                 /* FIXME This should probably throw an exception instead */
                 if (records.length == 0) {
                     critical ("Read failed for ID '%d'", id);
@@ -87,10 +87,10 @@ public class Icd.Model : GLib.Object {
             return records[0];
         }
 
-        public virtual GLib.SList<T> read_all () {
+        public virtual GLib.SList<T> read_all (bool exclude_blobs = true) {
             var list = new GLib.SList<T> ();
             try {
-                T[] records = db.select (name);
+                T[] records = db.select (name, null, exclude_blobs);
                 foreach (var record in records) {
                     list.append (record);
                 }
@@ -138,7 +138,7 @@ public class Icd.Model : GLib.Object {
             name = "images";
         }
 
-        public override Icd.Image? read (int id) {
+        public override Icd.Image? read (int id, bool exclude_blobs) {
             return null;
         }
     }

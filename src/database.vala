@@ -11,21 +11,16 @@ public errordomain Icd.DatabaseError {
 public class Icd.Database : GLib.Object {
 
     public Connection conn { get; construct set; }
-    private SqlBuilder builder;
-    private Statement stmt;
-    private SqlParser parser;
-    private Set out_params;
 
     public Database () {
         var config = Icd.Config.get_default ();
-        parser = new SqlParser ();
 
         /* Establish database connection */
         try {
             var dsn = config.get_db_dsn ();
             if (dsn != null) {
                 conn = Gda.Connection.open_from_dsn (dsn, null,
-                            Gda.ConnectionOptions.NONE);
+                            Gda.ConnectionOptions.THREAD_SAFE);
             } else {
                 string cnc = "";
                 var provider = config.get_db_provider ();
@@ -54,7 +49,7 @@ public class Icd.Database : GLib.Object {
                         break;
                 }
                 conn = Gda.Connection.open_from_string (provider, cnc, null,
-                            Gda.ConnectionOptions.NONE);
+                            Gda.ConnectionOptions.THREAD_SAFE);
             }
         } catch (GLib.Error e) {
             error ("An error occurred connecting to the database: %s", e.message);
@@ -112,7 +107,7 @@ public class Icd.Database : GLib.Object {
             } else {
                 /* Seemed like a reasonable way to check for blob types */
                 if (spec.get_blurb () == "blob") {
-                    value_type = "BLOB";
+                    value_type = "STRING";
                 }
             }
 
@@ -161,10 +156,23 @@ public class Icd.Database : GLib.Object {
      * FIXME This should be a generic Type select with ID (?)
      * FIXME Make the ID field a generic (?)
      * FIXME Read only properties can not be set in the returned object
+     * FIXME Using a bool on blob exclude seems hacky, should build query sensibly
      */
-    public T[] select<T> (string table, Value? id = null) throws GLib.Error {
+    public T[] select<T> (string table, Value? id = null, bool exclude_blobs = true) throws GLib.Error {
+        var ocl = (ObjectClass) typeof (T).class_ref ();
+        var builder = new SqlBuilder (SqlStatementType.SELECT);
+        builder.select_add_target (table, null);
+        if (exclude_blobs) {
+            foreach (var spec in ocl.list_properties ()) {
+                if (spec.get_blurb () != "blob") {
+                    builder.select_add_field (spec.get_name (), null, null);
+                }
+            }
+        } else {
+            builder.select_add_field ("*", null, null);
+        }
+
         try {
-            var ocl = (ObjectClass) typeof (T).class_ref ();
             string? pk = null;
             T[] result = {};
 
@@ -179,11 +187,15 @@ public class Icd.Database : GLib.Object {
                     "No primary key was defined for '%s'", table);
             }
 
-            var sql = "SELECT * FROM %s".printf (table);
             if (id != null) {
-                sql += " WHERE %s IS %d".printf (pk, id.get_int ());
+                var pk_id = builder.add_id (pk);
+                var expr_id = builder.add_expr_value (null, id);
+                var cond_id = builder.add_cond (SqlOperatorType.IS, pk_id, expr_id, 0);
+                builder.set_where (cond_id);
             }
-            var dm = conn.execute_select_command (sql);
+
+            var stmt = builder.get_statement ();
+            var dm = conn.statement_execute_select (stmt, null);
 
             for (int i = 0; i < dm.get_n_rows (); i++) {
                 var obj = Object.@new (typeof (T));
@@ -196,7 +208,7 @@ public class Icd.Database : GLib.Object {
                             "The query returned an invalid object definition");
                     }
                     if (spec.get_blurb () == "blob") {
-                        debug ("Not doing anything with blobs yet");
+                        obj[col] = Icd.Blob.from_base64 (val.get_string ());
                     } else {
                         if (val.holds (typeof (string))) {
                             obj[col] = val.get_string ();
@@ -225,10 +237,9 @@ public class Icd.Database : GLib.Object {
     }
 
     public void insert<T> (string table, T object, out Value id) throws GLib.Error {
-        builder = new SqlBuilder (SqlStatementType.INSERT);
+        var builder = new SqlBuilder (SqlStatementType.INSERT);
         builder.set_table (table);
         try {
-            /*var sql = "INSERT INTO %s".printf (table);*/
             string[] columns = {};
             var ocl = (ObjectClass) typeof (T).class_ref ();
 
@@ -269,17 +280,17 @@ public class Icd.Database : GLib.Object {
                     Icd.Blob blob;
                     string val;
                     ((Object) object).get (columns[i], out blob);
-                    debug ("blob: %lu", blob.length);
-                    val = Base64.encode (blob.to_array ());
+                    val = blob.to_base64 ();
                     builder.add_field_value_as_gvalue (columns[i], val);
                 }
             }
 
             try {
-                Set last_insert_row;
-                stmt = builder.get_statement ();
+                Set last_insert_row, out_params;
+                var stmt = builder.get_statement ();
                 stmt.get_parameters (out out_params);
-                conn.statement_execute_non_select (stmt, out_params, out last_insert_row);
+
+                int ret = conn.statement_execute_non_select (stmt, out_params, out last_insert_row);
             } catch (Error e) {
                 critical (e.message);
             }

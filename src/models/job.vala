@@ -12,9 +12,6 @@ public class Icd.Job : GLib.Object {
 
     public signal void changed (int id, string property);
 
-    construct {
-    }
-
     public string to_string () {
         string str = "{ \"id\": %d, \"interval\": %d, \"count\": %d,
             \"running\": %s}".printf (
@@ -42,6 +39,7 @@ public class Icd.Job : GLib.Object {
             }
 
             running = false;
+            debug ("delete job %d", id);
             model.jobs.delete (id);
         }
     }
