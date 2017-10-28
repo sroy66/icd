@@ -22,10 +22,8 @@ public class Icd.JobRouter : Valum.Router {
         if (id == null) {
             var jobs = model.jobs.read_all ();
             var generator = new Json.Generator ();
-
             if (jobs.length () > 0) {
                 res.headers.set_content_type ("application/json", null);
-
                 var job_array = new Json.Array ();
                 foreach (var job in jobs) {
                     job_array.add_element (Json.gobject_serialize (job));
@@ -74,6 +72,7 @@ public class Icd.JobRouter : Valum.Router {
                     obj.foreach_member ((prop, name, prop_node) => {
                         ((Object) job).set_property (name, prop_node.get_value ());
                     });
+
                     model.jobs.update (job);
                 } catch (GLib.Error e) {
                     throw new ClientError.BAD_REQUEST (
@@ -89,15 +88,19 @@ public class Icd.JobRouter : Valum.Router {
 
     private bool create_cb (Request req, Response res, NextCallback next, Context context, string content_type)
                             throws GLib.Error {
+
         switch (content_type) {
             case "application/json":
                 try {
                     var parser = new Json.Parser ();
                     parser.load_from_stream (req.body);
-                    var job = Json.gobject_deserialize (typeof (Icd.Job),
-                                                        parser.get_root ());
+                    /*debug (Json.to_string (parser.get_root (), true));*/
+                    Icd.Job job = Json.gobject_deserialize (typeof (Icd.Job),
+                                                parser.get_root ()) as Icd.Job;
+                    /*debug ("id: %d count: %d interval: %d", job.id, job.count, job.interval);*/
                     var model = Icd.Model.get_default ();
-                    model.jobs.create ((Icd.Job) job);
+                    job.id = model.jobs.create (job);
+					job.run.begin ();
                 } catch (GLib.Error e) {
                     throw new ClientError.BAD_REQUEST (
                         "Invalid or malformed JSON was provided");
@@ -107,6 +110,8 @@ public class Icd.JobRouter : Valum.Router {
                 throw new ClientError.BAD_REQUEST (
                     "Request used incorrect content type, 'application/json' expected");
         }
+
+        res.headers.set_content_type ("image/png", null);
 
         return res.end ();
     }
