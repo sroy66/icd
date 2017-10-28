@@ -3,8 +3,60 @@
   {{include "@templatedir@/header.tmpl"}}
   <body>
     {{include "@templatedir@/nav.tmpl"}}
-    <div class="main container-fluid">
+    <div class="main container">
+      <h2>Dashboard</h2>
+      <!-- Performance meters row -->
+      <div class="row">
+        <div class="col-sm-4">
+          <div class="card dashboard-card">
+            <div class="card-body">
+              <h4 class="card-title">Storage</h4>
+              <div class="storage-progress circle-progress">
+                <strong>0<i>%</i></strong>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-sm-4">
+          <div class="card dashboard-card">
+            <div class="card-body">
+              <h4 class="card-title">Memory</h4>
+              <div class="memory-progress circle-progress">
+                <strong>0<i>%</i></strong>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-sm-4">
+          <div class="card dashboard-card">
+            <div class="card-body">
+              <h4 class="card-title">CPU</h4>
+              <div class="cpu-progress circle-progress">
+                <strong>0<i>%</i></strong>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Job row -->
+      <div class="row">
+        <div class="col-sm-4">
+          <div class="card dashboard-card">
+            <div class="card-body">
+              <h4 class="card-title">Job Status</h4>
+            </div>
+          </div>
+        </div>
+        <div class="col-sm-8">
+          <div class="card dashboard-card">
+            <div class="card-body">
+              <h4 class="card-title">Job Queue</h4>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
     {{include "@templatedir@/footer.tmpl"}}
+    <script src="/static/js/index.js"></script>
   </body>
 </html>

@@ -3,9 +3,37 @@
   {{include "@templatedir@/header.tmpl"}}
   <body>
     {{include "@templatedir@/nav.tmpl"}}
-    <div class="main container-fluid">
+    <div class="main container">
       <h2>Cameras</h2>
+      <table class="table table-hover" id="camera-table">
+        <thead>
+          <tr>
+            <th scope="col">#</th>
+            <th scope="col">Name</th>
+          </tr>
+        </thead>
+        <tbody>
+        </tbody>
+      </table>
     </div>
     {{include "@templatedir@/footer.tmpl"}}
+    <script type="text/javascript">
+      $(document).ready(function() {
+        // TODO put this into the template (?)
+        $('nav li').removeClass('active');
+        $('#cameras').addClass('active');
+
+        $.get('api/cameras/', function(cameras) {
+          for (i in cameras) {
+            if(cameras[i] != null) {
+              var row = $('<tr>')
+                .append($('<th>').text(cameras[i].id).attr('scope', 'row'))
+                .append($('<td>').text(cameras[i].name))
+              $('#camera-table > tbody:last-child').append(row);
+            }
+          }
+        }, 'json');
+      });
+    </script>
   </body>
 </html>

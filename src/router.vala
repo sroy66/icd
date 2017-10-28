@@ -38,6 +38,9 @@ public class Icd.Router : Valum.Router {
                                              ctx["path"].get_string ());
         }));
 
+        /* Performance metrics from system */
+        get ("/api/perf", perf_cb);
+
         /* XXX Not sure if the subdomain is really necessary for my needs */
         var image_router = new ImageRouter ();
         use (subdomain ("images", image_router.handle));
@@ -92,5 +95,14 @@ public class Icd.Router : Valum.Router {
                              throws GLib.Error {
         var scope = new Scope ();
         return cameras.expand (res.body, scope);
+    }
+
+    private bool perf_cb (Request req, Response res, NextCallback next, Valum.Context ctx)
+                          throws GLib.Error {
+        var generator = new Json.Generator ();
+        res.headers.set_content_type ("application/json", null);
+        //generator.root = Json.gobject_serialize (image);
+        generator.pretty = false;
+        return generator.to_stream (res.body);
     }
 }

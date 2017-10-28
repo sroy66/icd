@@ -10,6 +10,8 @@
      -->
   <gresource prefix="/static">
     <file compressed="true" alias="styles/layout.css">static/styles/layout.css</file>
+    <file compressed="true" alias="js/circle-progress.min.js">static/js/circle-progress.min.js</file>
+    <file compressed="true" alias="js/index.js">static/js/index.js</file>
     <file alias="images/logo.png">static/images/logo.png</file>
   </gresource>
 </gresources>

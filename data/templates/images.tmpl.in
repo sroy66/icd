@@ -3,9 +3,43 @@
   {{include "@templatedir@/header.tmpl"}}
   <body>
     {{include "@templatedir@/nav.tmpl"}}
-    <div class="main container-fluid">
+    <div class="main container">
       <h2>Images</h2>
+      <table class="table table-hover" id="image-table">
+        <thead>
+          <tr>
+            <th scope="col">#</th>
+            <th scope="col">Name</th>
+            <th scope="col">Timestamp</th>
+            <th scope="col">Width</th>
+            <th scope="col">Height</th>
+          </tr>
+        </thead>
+        <tbody>
+        </tbody>
+      </table>
     </div>
     {{include "@templatedir@/footer.tmpl"}}
+    <script type="text/javascript">
+      $(document).ready(function() {
+        // TODO put this into the template (?)
+        $('nav li').removeClass('active');
+        $('#images').addClass('active');
+
+        $.get('api/images/', function(images) {
+          for (i in images) {
+            if(images[i] != null) {
+              var row = $('<tr>')
+                .append($('<th>').text(images[i].id).attr('scope', 'row'))
+                .append($('<td>').append('<a>').attr('href', 'images/' + images[i].id).text(images[i].name))
+                .append($('<td>').text(images[i].timestamp))
+                .append($('<td>').text(images[i].width))
+                .append($('<td>').text(images[i].height));
+              $('#image-table > tbody:last-child').append(row);
+            }
+          }
+        }, 'json');
+      });
+    </script>
   </body>
 </html>
