@@ -1,4 +1,3 @@
-using GPhoto;
 using VSGI;
 using Valum;
 using Valum.Static;
@@ -8,6 +7,7 @@ using Template;
 public class Icd.Router : Valum.Router {
 
     private Template.Template index;
+    private Template.Template image;
     private Template.Template images;
     private Template.Template cameras;
     private Template.TemplateLocator locator;
@@ -31,6 +31,7 @@ public class Icd.Router : Valum.Router {
         /* Routes */
         get ("/", index_cb);
         get ("/images", images_cb);
+        get ("/images/<int:id>", image_cb);
         get ("/cameras", cameras_cb);
         get ("/static/<path:path>", sequence (serve_from_file (File.new_for_path ("src/static")),
                                               (req, res, next, ctx) => {
@@ -61,11 +62,13 @@ public class Icd.Router : Valum.Router {
         locator.append_search_path ("/templates");
 
         index = new Template.Template (locator);
+        image = new Template.Template (locator);
         images = new Template.Template (locator);
         cameras = new Template.Template (locator);
 
         try {
             index.parse_file (File.new_for_path (Path.build_filename (Icd.TEMPLATEDIR, "index.tmpl")));
+            image.parse_file (File.new_for_path (Path.build_filename (Icd.TEMPLATEDIR, "image.tmpl")));
             images.parse_file (File.new_for_path (Path.build_filename (Icd.TEMPLATEDIR, "images.tmpl")));
             cameras.parse_file (File.new_for_path (Path.build_filename (Icd.TEMPLATEDIR, "cameras.tmpl")));
         } catch (GLib.Error e) {
@@ -85,6 +88,19 @@ public class Icd.Router : Valum.Router {
         return index.expand (res.body, scope);
     }
 
+    /**
+     * TODO Figure out why this doesn't work in a single route for `images(/<int:id>)?`
+     */
+    private bool image_cb (Request req, Response res, NextCallback next, Valum.Context ctx)
+                           throws GLib.Error {
+        var id = ctx["id"];
+        var scope = new Scope ();
+        var image_id = scope.get ("id");
+        image_id.assign_value (id);
+
+        return image.expand (res.body, scope);
+    }
+
     private bool images_cb (Request req, Response res, NextCallback next, Valum.Context ctx)
                             throws GLib.Error {
         var scope = new Scope ();
@@ -99,10 +115,43 @@ public class Icd.Router : Valum.Router {
 
     private bool perf_cb (Request req, Response res, NextCallback next, Valum.Context ctx)
                           throws GLib.Error {
+        var builder = new Json.Builder ();
         var generator = new Json.Generator ();
         res.headers.set_content_type ("application/json", null);
-        //generator.root = Json.gobject_serialize (image);
+
+        double value;
+        GTop.Cpu cpu;
+        GTop.Memory mem;
+        GTop.FsUsage fs;
+
+        GTop.get_cpu (out cpu);
+        GTop.get_mem (out mem);
+        GTop.get_fsusage (out fs, "/");
+
+        builder.begin_object ();
+        builder.set_member_name ("cpu");
+        builder.begin_object ();
+        builder.set_member_name ("value");
+        value = (double)(cpu.total - (cpu.idle + cpu.iowait)) / (double)cpu.total;
+        builder.add_double_value (value);
+        builder.end_object ();
+        builder.set_member_name ("mem");
+        builder.begin_object ();
+        builder.set_member_name ("value");
+        value = (double)(mem.total - (mem.free + mem.buffer + mem.cached)) / (double)mem.total;
+        builder.add_double_value (value);
+        builder.end_object ();
+        builder.set_member_name ("hdd");
+        builder.begin_object ();
+        builder.set_member_name ("value");
+        value = (double)fs.bfree / (double)fs.blocks;
+        builder.add_double_value (value);
+        builder.end_object ();
+        builder.end_object ();
+
+        generator.root = builder.get_root ();
         generator.pretty = false;
+
         return generator.to_stream (res.body);
     }
 }

@@ -40,10 +40,14 @@ public class Icd.Camera : GLib.Object {
         Result ret;
         CameraFile file = null;
         CameraFilePath path;
-        Icd.Image image = null;
+        Icd.Image image = new Icd.Image ();
 
+        uint8 *data;
+        ulong data_len;
         string tmpname = "tmpfileXXXXXX";
         int fd = -1;
+        long timestamp = 0;
+        int width = 0, height = 0;
 
         ret = camera.capture (CameraCaptureType.IMAGE, out path, gp_context);
         if (ret != Result.OK) {
@@ -67,37 +71,44 @@ public class Icd.Camera : GLib.Object {
                 if (ret != Result.OK) {
                     critical (ret.to_full_string ());
                 } else {
-                    /*
-                     *FIXME get timestamp, width, length..
-                     *CameraFileInfo info;
-                     *ret = camera.get_file_info ((string) path.folder,
-                     *                            file,
-                     *                            info,
-                     *                            gp_context);
-                     */
+                    CameraFileInfo info;
+                    ret = camera.get_file_info ((string) path.folder,
+                                                (string) path.name,
+                                                out info,
+                                                gp_context);
                     if (ret != Result.OK) {
                         critical (ret.to_full_string ());
                     } else {
-
+                        timestamp = info.file.mtime;
+                        width = (int) info.file.width;
+                        height = (int) info.file.height;
                     }
                 }
             }
         }
 
-        uint8* data;
-        ulong data_len;
         ret = file.get_data_and_size (out data, out data_len);
-        Icd.Blob blob = new Icd.Blob ();
-        Posix.memcpy (blob.data, data, data_len);
-        blob.length = data_len;
-        debug ("image data length: %lu %lu", data_len, blob.length);
 
+        /**
+         * TODO Throw error if previous data retrieval fails
+         */
         if (ret != Result.OK) {
             critical (ret.to_full_string ());
-        } else {
-            /* FIXME only the data property is being set for now */
-            image = new Image.full ("name", 0, -1, -1, blob);
         }
+
+        image = new Icd.Image ();
+        /* FIXME Make a real name */
+        image.name = "Image";
+        image.timestamp = timestamp;
+        image.width = width;
+        image.height = height;
+        var blob = image.data;
+        //blob.length = data_len;
+        blob.initialize (data_len);
+
+        //Icd.Blob blob = new Icd.Blob.from_length (data_len);
+        Posix.memcpy (blob.data, data, (size_t) data_len);
+        //image.data = blob;
 
         FileUtils.close (fd);
         FileUtils.unlink (tmpname);

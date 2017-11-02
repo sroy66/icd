@@ -52,5 +52,4 @@ public class Icd.Job : GLib.Object {
 		    }, priority);
 	    yield;
 	}
-
 }

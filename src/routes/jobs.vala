@@ -9,6 +9,11 @@ public class Icd.JobRouter : Valum.Router {
             return next ();
         });
 
+        use ((req, res, next) => {
+            res.headers.append ("Access-Control-Allow-Origin", "*");
+            return next ();
+        });
+
         rule (Method.GET,    "/(<int:id>)?", view_cb);
         rule (Method.PUT,    "/<int:id>",    accept ("application/json", edit_cb));
         rule (Method.POST,   "/",            accept ("application/json", create_cb));

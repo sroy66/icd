@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+  {{include "@templatedir@/header.tmpl"}}
+  <body>
+    {{include "@templatedir@/nav.tmpl"}}
+    <div class="main container">
+      <h2 id="image-name"></h2>
+      <!--<div id="image"></div>-->
+      <div>
+        <img id="image" class="img-fluid"></img>
+      </div>
+    </div>
+    {{include "@templatedir@/footer.tmpl"}}
+    <script type="text/javascript">
+      $(document).ready(function() {
+        // TODO put this into the template (?)
+        $('nav li').removeClass('active');
+
+        $.get('/api/images/{{ id }}/all', function(image) {
+          $('#image-name').text(image.name);
+          var src = 'data:image/png;base64,' + image.data;
+          var img = $('#image');
+          img.attr('src', src);
+        }, 'json');
+      });
+    </script>
+  </body>
+</html>

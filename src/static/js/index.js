@@ -1,9 +1,9 @@
 var hdd = $('.storage-progress.circle-progress');
-var ram = $('.memory-progress.circle-progress');
+var mem = $('.memory-progress.circle-progress');
 var cpu = $('.cpu-progress.circle-progress');
 
 hdd.circleProgress({
-  value: 0.25,
+  value: 0.0,
   animation: true,
   thickness: 10,
   fill: {
@@ -13,19 +13,19 @@ hdd.circleProgress({
   $(this).find('strong').html(Math.round(100 * $(this).circleProgress('value')) + '<i>%</i>');
 });
 
-ram.circleProgress({
-  value: 0.5,
+mem.circleProgress({
+  value: 0.0,
   animation: true,
   thickness: 10,
   fill: {
     gradient: ['#ff1e41', '#ff5f43']
   }
 }).on('circle-animation-progress', function(event, progress) {
-  $(this).find('strong').html(Math.round(100 * ram.circleProgress('value')) + '<i>%</i>');
+  $(this).find('strong').html(Math.round(100 * mem.circleProgress('value')) + '<i>%</i>');
 });
 
 cpu.circleProgress({
-  value: 0.75,
+  value: 0.0,
   animation: true,
   thickness: 10,
   fill: {
@@ -42,16 +42,16 @@ $(document).ready(function() {
 
   var interval = 1000;
   var refresh = function() {
-    hdd.circleProgress('value', Math.random());
-    ram.circleProgress('value', Math.random());
-    cpu.circleProgress('value', Math.random());
-    setTimeout(function() {
-      refresh();
-    }, interval);
+    //hdd.circleProgress('value', Math.random());
+    //mem.circleProgress('value', Math.random());
+    //cpu.circleProgress('value', Math.random());
+    //setTimeout(function() {
+    //  refresh();
+    //}, interval);
 
-    $.get('api/perf/', function(perf) {
+    $.get('api/perf', function(perf) {
       hdd.circleProgress('value', perf.hdd.value);
-      ram.circleProgress('value', perf.ram.value);
+      mem.circleProgress('value', perf.mem.value);
       cpu.circleProgress('value', perf.cpu.value);
       setTimeout(function() {
         refresh();

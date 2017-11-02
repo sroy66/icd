@@ -13,7 +13,7 @@ The API is generated from RAML and can be viewed [here](doc/api/API.md).
 sudo dnf install python-pip3 cmake valac flex bison gettext \
     libgphoto2-devel libgee-devel json-glib-devel libgda-devel libgda-sqlite \
     libgda-mysql libgda-postgres libsoup2.4-devel libxml2-devel openssl-devel \
-    libxml2-devel glib2-devel
+    libxml2-devel libgtop2-devel glib2-devel
 ```
 
 ### Debian/Ubuntu
@@ -21,7 +21,8 @@ sudo dnf install python-pip3 cmake valac flex bison gettext \
 ```bash
 sudo apt-get install python3-pip cmake valac flex bison gettext \
     libgda-5.0-dev libgee-0.8-dev libgirepository1.0-dev libglib2.0-dev \
-    libgphoto2-dev libjson-glib-dev libsoup2.4-dev libssl-dev libxml2-utils
+    libgphoto2-dev libjson-glib-dev libsoup2.4-dev libssl-dev libxml2-utils \
+    libgtop2-dev
 ```
 
 ### Common

@@ -26,12 +26,13 @@
         $('nav li').removeClass('active');
         $('#images').addClass('active');
 
-        $.get('api/images/', function(images) {
+        $.get('/api/images/', function(images) {
           for (i in images) {
             if(images[i] != null) {
+              var link = $('<a>').attr('href', '/images/' + images[i].id).text(images[i].name);
               var row = $('<tr>')
                 .append($('<th>').text(images[i].id).attr('scope', 'row'))
-                .append($('<td>').append('<a>').attr('href', 'images/' + images[i].id).text(images[i].name))
+                .append($('<td>').append(link))
                 .append($('<td>').text(images[i].timestamp))
                 .append($('<td>').text(images[i].width))
                 .append($('<td>').text(images[i].height));

@@ -45,6 +45,7 @@ add_project_arguments([
   ['--vapidir', join_paths(meson.current_source_dir(), 'vapi')],
   ['--pkg', 'libgphoto2'],
   ['--pkg', 'libgda-5.0'],
+  ['--pkg', 'libgtop-2.0'],
 ], language: 'vala')
 
 dep_glib = dependency('glib-2.0')
@@ -53,6 +54,7 @@ dep_gio = dependency('gio-2.0')
 dep_gda = dependency('libgda-5.0')
 dep_gee = dependency('gee-0.8')
 dep_gphoto = dependency('libgphoto2')
+dep_gtop = dependency('libgtop-2.0')
 dep_json = dependency('json-glib-1.0')
 dep_soup = dependency('libsoup-2.4')
 dep_tmpl = dependency('template-glib-1.0')
@@ -85,6 +87,7 @@ icd_deps = [
   dep_gda,
   dep_gee,
   dep_gphoto,
+  dep_gtop,
   dep_json,
   dep_soup,
   dep_tmpl,

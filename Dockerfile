@@ -9,6 +9,7 @@ RUN apt-get install -y \
     libgirepository1.0-dev \
     libglib2.0-dev \
     libgphoto2-dev \
+    libgtop2-dev \
     libjson-glib-dev \
     libsoup2.4-dev \
     libssl-dev \

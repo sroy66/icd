@@ -8,6 +8,11 @@ public class Icd.Blob : GLib.Object {
      *}
      */
 
+    public void initialize (ulong length) {
+        this.length = length;
+        data = new uint8[length];
+    }
+
     public static Icd.Blob from_base64 (string text) {
         Icd.Blob blob = new Icd.Blob ();
         var decoded = Base64.decode (text);
@@ -16,6 +21,13 @@ public class Icd.Blob : GLib.Object {
 
         return blob;
     }
+
+    /*
+     *public static Icd.Blob from_length (ulong length) {
+     *    this.length = length;
+     *    data = new uint8[length];
+     *}
+     */
 
     public uint8[] to_array () {
         uint8[] ary = new uint8[length];
@@ -82,6 +94,9 @@ public class Icd.Image : GLib.Object, Json.Serializable {
         if (property_name == "data") {
             node = new Json.Node (Json.NodeType.VALUE);
             node.set_string (data.to_base64 ());
+        } else if (property_name == "timestamp") {
+            node = new Json.Node (Json.NodeType.VALUE);
+            node.set_int ((int64) value.get_long ());
         } else {
             node = default_serialize_property (property_name, value, pspec);
         }
@@ -95,16 +110,23 @@ public class Icd.Image : GLib.Object, Json.Serializable {
                                       Json.Node property_node) {
         if (property_name == "data") {
             warning ("Image data can't be deserialized from JSON yet");
+            return false;
+        } else if (property_name == "timestamp") {
+            value = Value (typeof (long));
+            value.set_long ((long) property_node.get_int ());
             return true;
         } else {
-            Value val;
-            return default_deserialize_property (property_name, out val, pspec, property_node);
+            value = property_node.get_value ();
+            return true;
         }
     }
 
-    public weak ParamSpec? find_property (string name) {
-        warning ("JSON find property method has not been implemented yet");
+    public unowned ParamSpec? find_property (string name) {
+        foreach (var property in list_properties ()) {
+            if (property.get_name () == name) {
+                return property;
+            }
+        }
         return null;
     }
-
 }

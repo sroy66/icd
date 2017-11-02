@@ -33,6 +33,14 @@ configure_file(
 )
 
 configure_file(
+          input: 'image.tmpl',
+         output: 'image.tmpl',
+  configuration: subst,
+        install: true,
+    install_dir: join_paths(pkg_datadir, 'templates'),
+)
+
+configure_file(
           input: 'images.tmpl.in',
          output: 'images.tmpl',
   configuration: subst,

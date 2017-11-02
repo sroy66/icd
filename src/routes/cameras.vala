@@ -9,6 +9,11 @@ public class Icd.CameraRouter : Valum.Router {
             return next ();
         });
 
+        use ((req, res, next) => {
+            res.headers.append ("Access-Control-Allow-Origin", "*");
+            return next ();
+        });
+
         get ("/",         view_cb);
         get ("/<int:id>", view_cb);
         put ("/<int:id>", edit_cb);

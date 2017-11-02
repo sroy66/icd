@@ -9,6 +9,11 @@ public class Icd.ImageRouter : Valum.Router {
             return next ();
         });
 
+        use ((req, res, next) => {
+            res.headers.append ("Access-Control-Allow-Origin", "*");
+            return next ();
+        });
+
         rule (Method.GET,
               "/(<int:id>)?(/<action>)?",
               view_cb);
@@ -25,7 +30,12 @@ public class Icd.ImageRouter : Valum.Router {
 
     private async void stream (string data, OutputStream os) {
         size_t bytes;
-        yield os.write_all_async (data.data, Priority.DEFAULT, null, out bytes);
+        try {
+            yield os.write_all_async (data.data, Priority.DEFAULT, null, out bytes);
+        } catch (GLib.Error e) {
+            /* FIXME throw the error to allow the route to do the same */
+            critical (e.message);
+        }
     }
 
     private bool view_cb (Request req, Response res, NextCallback next, Context context)
@@ -67,8 +77,10 @@ public class Icd.ImageRouter : Valum.Router {
                     /* TODO create array with just info nodes */
                     foreach (var image in images) {
                         var object = new Json.Object ();
+                        /* FIXME should probably serialize and drop the data property */
                         object.set_int_member ("id", image.id);
                         object.set_string_member ("name", image.name);
+                        object.set_int_member ("timestamp", (int64) image.timestamp);
                         object.set_int_member ("width", image.width);
                         object.set_int_member ("height", image.height);
 
