@@ -297,10 +297,8 @@ public class Icd.Database : GLib.Object {
 
              /*get the id*/
             string sql = "SELECT COUNT (*) FROM %s".printf (table);
-            debug ("SQL: [%s]", sql);
             var dm = conn.execute_select_command (sql);
             id = dm.get_value_at (0, 0);
-            debug ("id: %d", id.get_int ());
         } catch (GLib.Error e) {
             throw new DatabaseError.EXECUTE_QUERY (
                 "Error creating '%s' record: %s", table, e.message);

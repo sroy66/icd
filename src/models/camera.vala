@@ -40,7 +40,7 @@ public class Icd.Camera : GLib.Object {
         Result ret;
         CameraFile file = null;
         CameraFilePath path;
-        Icd.Image image = new Icd.Image ();
+        Icd.Image image;
 
         uint8 *data;
         ulong data_len;

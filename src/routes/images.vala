@@ -117,6 +117,7 @@ public class Icd.ImageRouter : Valum.Router {
                     var object = new Json.Object ();
                     object.set_int_member ("id", image.id);
                     object.set_string_member ("name", image.name);
+                    object.set_int_member ("timestamp", image.timestamp);
                     object.set_int_member ("width", image.width);
                     object.set_int_member ("height", image.height);
 
