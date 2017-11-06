@@ -100,6 +100,20 @@ public class Icd.Model : GLib.Object {
             return list;
         }
 
+        public virtual GLib.SList<T> read_num (int n, int offset, bool exclude_blobs = true) {
+            var list = new GLib.SList<T> ();
+            try {
+                /*debug ("read_num (%d, %d, %s)", n, offset, exclude_blobs.to_string ());*/
+                T[] records = db.select (name, null, exclude_blobs, n, offset);
+                foreach (var record in records) {
+                    list.append (record);
+                }
+            } catch (GLib.Error e) {
+                critical (e.message);
+            }
+            return list;
+        }
+
         public virtual void update (T object) {
             try {
                 db.update (name, object);
@@ -140,6 +154,34 @@ public class Icd.Model : GLib.Object {
 
         public override Icd.Image? read (int id, bool exclude_blobs) {
             return null;
+        }
+    }
+
+    public class CameraRepository : Repository<Icd.Camera?> {
+
+        public CameraRepository (Icd.Database db) {
+            base (db);
+            name = "cameras";
+            // do the udev stuff
+            //udev.uevent.connect (connection_cb);
+        }
+
+        private void connection_cb () {
+            /*
+             *if (evt == add) {
+             *    var cam = new Camera ();
+             *    cam.initialize ();
+             *    // fill in cam ?
+             *    create (cam);
+             *} else if (evt == remove) {
+             *    list = read_all ();
+             *    for (cam in list) {
+             *        if (cam.devname == evt.get("DEVNAME") {
+             *            delete (cam.id);
+             *        }
+             *    }
+             *}
+             */
         }
     }
 }

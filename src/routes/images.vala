@@ -17,6 +17,9 @@ public class Icd.ImageRouter : Valum.Router {
         rule (Method.GET,
               "/(<int:id>)?(/<action>)?",
               view_cb);
+        rule (Method.GET,
+              "(/n/<int:n>)?(/offset/<int:offset>)?",
+              view_cb);
         rule (Method.PUT,
               "/<int:id>",
               accept ("application/json", edit_cb));
@@ -42,8 +45,13 @@ public class Icd.ImageRouter : Valum.Router {
                           throws GLib.Error {
         var id = context["id"];
         var action = context["action"];
+        var n = context["n"];
+        var offset = context["offset"];
         bool exclude_blobs = true;
         string action_str = "none";
+
+        debug ("id: %s action: %s n: %s offset: %s", id.get_string (),
+               action.get_string (), n.get_string (), offset.get_string ());
 
         if (action != null) {
             exclude_blobs = (action.get_string () == "all") ? false : true;
@@ -53,8 +61,25 @@ public class Icd.ImageRouter : Valum.Router {
         res.headers.set_content_type ("application/json", null);
 
         var model = Icd.Model.get_default ();
-        if (id == null) {
-            var images = model.images.read_all ();
+        if (id == null) { // means get a range of images with
+            GLib.SList<Icd.Image> images = null;
+            var n_str = n.get_string ();
+            var offset_str = offset.get_string ();
+            if ((n_str == null) && (offset_str == null)) {
+                images = model.images.read_all (true);
+            } else {
+                int n_int = 0;
+                int offset_int = 0;
+
+                if (offset_str != null) {
+                    offset_int = int.parse (offset_str);
+                }
+                if (n_str != "") {
+                    n_int = int.parse (n_str);
+                }
+                images = model.images.read_num (n_int, offset_int, exclude_blobs);
+            }
+
             if (images.length () > 0) {
                 var image_array = new Json.Array ();
                 var generator = new Json.Generator ();

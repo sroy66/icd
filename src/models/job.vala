@@ -42,6 +42,8 @@ public class Icd.Job : GLib.Object {
                 } catch (GLib.Error e) {
                     critical ("GLib.Error: %s", e.message);
                 }
+
+                model.jobs.update (this);
             }
 
             running = false;
