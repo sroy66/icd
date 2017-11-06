@@ -2,11 +2,10 @@ public class Icd.Blob : GLib.Object {
     public uint8[] data;
     public ulong length;
 
-    /*
-     *public Blob.from_base64 (string text) {
-     *    from_base64 (text);
-     *}
-     */
+    public static Icd.Blob.from_length (ulong length) {
+        this.length = length;
+        data = new uint8[length];
+    }
 
     public void initialize (ulong length) {
         this.length = length;

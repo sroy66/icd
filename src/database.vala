@@ -158,7 +158,8 @@ public class Icd.Database : GLib.Object {
      * FIXME Read only properties can not be set in the returned object
      * FIXME Using a bool on blob exclude seems hacky, should build query sensibly
      */
-    public T[] select<T> (string table, Value? id = null, bool exclude_blobs = true) throws GLib.Error {
+    public T[] select<T> (string table, Value? id = null,
+                          bool exclude_blobs = true, int n = 0, int offset = 0) throws GLib.Error {
         var ocl = (ObjectClass) typeof (T).class_ref ();
         var builder = new SqlBuilder (SqlStatementType.SELECT);
         builder.select_add_target (table, null);
@@ -187,12 +188,25 @@ public class Icd.Database : GLib.Object {
                     "No primary key was defined for '%s'", table);
             }
 
+            var pk_id = builder.add_id (pk);
             if (id != null) {
-                var pk_id = builder.add_id (pk);
                 var expr_id = builder.add_expr_value (null, id);
                 var cond_id = builder.add_cond (SqlOperatorType.IS, pk_id, expr_id, 0);
                 builder.set_where (cond_id);
+            } else {
+                var expr_start = builder.add_expr_value (null, offset);
+                var cond1_id = builder.add_cond (SqlOperatorType.GEQ, pk_id, expr_start, 0);
+                if (n != 0) {
+                    var expr_end = builder.add_expr_value (null, offset + n);
+                    var cond2_id = builder.add_cond (SqlOperatorType.LT, pk_id, expr_end, 0);
+                    var cond3_id = builder.add_cond (SqlOperatorType.AND, cond1_id, cond2_id, 0);
+                    builder.set_where (cond3_id);
+                } else {
+                    builder.set_where (cond1_id);
+                }
             }
+
+
 
             var stmt = builder.get_statement ();
             var dm = conn.statement_execute_select (stmt, null);
@@ -297,10 +311,8 @@ public class Icd.Database : GLib.Object {
 
              /*get the id*/
             string sql = "SELECT COUNT (*) FROM %s".printf (table);
-            debug ("SQL: [%s]", sql);
             var dm = conn.execute_select_command (sql);
             id = dm.get_value_at (0, 0);
-            debug ("id: %d", id.get_int ());
         } catch (GLib.Error e) {
             throw new DatabaseError.EXECUTE_QUERY (
                 "Error creating '%s' record: %s", table, e.message);

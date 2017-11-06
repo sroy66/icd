@@ -101,7 +101,7 @@ public class Icd.JobRouter : Valum.Router {
                     parser.load_from_stream (req.body);
                     /*debug (Json.to_string (parser.get_root (), true));*/
                     Icd.Job job = Json.gobject_deserialize (typeof (Icd.Job),
-                                                parser.get_root ()) as Icd.Job;
+                                                        parser.get_root ()) as Icd.Job;
                     /*debug ("id: %d count: %d interval: %d", job.id, job.count, job.interval);*/
                     var model = Icd.Model.get_default ();
                     job.id = model.jobs.create (job);

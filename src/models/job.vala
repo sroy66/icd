@@ -8,6 +8,8 @@ public class Icd.Job : GLib.Object {
 
     public int count { get; set; }
 
+    public int remaining { get; set; }
+
     public bool running { get; set; }
 
     public signal void changed (int id, string property);
@@ -27,19 +29,24 @@ public class Icd.Job : GLib.Object {
         running = true;
         while (running) {
             for (int i = 0; i < count; i++) {
+                remaining = count - i;
                 try {
                     /* take a picture and save the image in the database */
                     var image = camera.capture ();
-                    debug ("image length: %lu", image.data.length);
+                    debug ("image length: %lu width: %d height: %d",
+                                                          image.data.length,
+                                                          image.width,
+                                                          image.height);
                     model.images.create (image);
                     yield nap (interval); //FIXME This is not accurate. Use a thread.
                 } catch (GLib.Error e) {
                     critical ("GLib.Error: %s", e.message);
                 }
+
+                model.jobs.update (this);
             }
 
             running = false;
-            debug ("delete job %d", id);
             model.jobs.delete (id);
         }
     }
