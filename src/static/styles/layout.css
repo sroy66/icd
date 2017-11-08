@@ -37,6 +37,22 @@ body {
   padding-bottom: 20px;
 }
 
+.main > h2 {
+  padding-bottom: 20px;
+}
+
+.n-selector {
+  padding-left: 20px;
+}
+
+.n-selector-item {
+  float: left;
+}
+
+.n-selector-button {
+  padding: 0 10px;
+}
+
 .circle-progress {
   margin: 6px 6px 20px;
   display: inline-block;

@@ -55,6 +55,18 @@ public class Icd.Model : GLib.Object {
             }
         }
 
+        public virtual int count () {
+            int n = 0;
+
+            try {
+                n = db.count (name);
+            } catch (GLib.Error e) {
+                critical (e.message);
+            }
+
+            return n;
+        }
+
         /**
          * @return The id which is also the primary key value from the database
          */

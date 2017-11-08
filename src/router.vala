@@ -39,7 +39,8 @@ public class Icd.Router : Valum.Router {
                                              ctx["path"].get_string ());
         }));
 
-        /* Performance metrics from system */
+        /* Metrics from system */
+        get ("/api/count/<string:table>", count_cb);
         get ("/api/perf", perf_cb);
 
         /* XXX Not sure if the subdomain is really necessary for my needs */
@@ -111,6 +112,39 @@ public class Icd.Router : Valum.Router {
                              throws GLib.Error {
         var scope = new Scope ();
         return cameras.expand (res.body, scope);
+    }
+
+    private bool count_cb (Request req, Response res, NextCallback next, Valum.Context ctx)
+                           throws GLib.Error {
+        res.headers.set_content_type ("application/json", null);
+        var table = ctx["table"];
+
+        if (table != null) {
+            var model = Icd.Model.get_default ();
+            var builder = new Json.Builder ();
+            var generator = new Json.Generator ();
+            int n = 0;
+            if (table.get_string () == "images") {
+                n = model.images.count ();
+            } else if (table.get_string () == "cameras") {
+                n = model.cameras.count ();
+            } else if (table.get_string () == "jobs") {
+                n = model.cameras.count ();
+            } else {
+                throw new ClientError.BAD_REQUEST ("An invalid table was name provided");
+            }
+            builder.begin_object ();
+            builder.set_member_name ("count");
+            builder.add_int_value (n);
+            builder.end_object ();
+
+            generator.root = builder.get_root ();
+            generator.pretty = false;
+
+            return generator.to_stream (res.body);
+        } else {
+            throw new ClientError.BAD_REQUEST ("No table name was provided");
+        }
     }
 
     private bool perf_cb (Request req, Response res, NextCallback next, Valum.Context ctx)

@@ -5,42 +5,182 @@
     {{include "@templatedir@/nav.tmpl"}}
     <div class="main container">
       <h2>Images</h2>
-      <table class="table table-hover" id="image-table">
-        <thead>
-          <tr>
-            <th scope="col">#</th>
-            <th scope="col">Name</th>
-            <th scope="col">Timestamp</th>
-            <th scope="col">Width</th>
-            <th scope="col">Height</th>
-          </tr>
-        </thead>
-        <tbody>
-        </tbody>
-      </table>
+      <div class="row n-selector vertical-center">
+        <label class="n-selector-item">Show</label>
+        <div class="dropdown n-selector-item n-selector-button">
+          <button class="btn btn-primary btn-sm dropdown-toggle" type="button" id="imageCountSelection"
+                  data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">10</button>
+          <div class="dropdown-menu" aria-labelledby="imageCountSelection">
+            <a class="dropdown-item" id="countDefault" href="#" onclick="setCount(10)">10</a>
+            <a class="dropdown-item" href="#" onclick="setCount(25)">25</a>
+            <a class="dropdown-item" href="#" onclick="setCount(50)">50</a>
+            <a class="dropdown-item" href="#" onclick="setCount(100)">100</a>
+          </div>
+        </div>
+        <p class="n-selector-item">entries</p>
+      </div>
+      <div class="row">
+        <div class="col-sm-12">
+          <table class="table table-hover" id="image-table">
+            <thead>
+              <tr>
+                <th scope="col">#</th>
+                <th scope="col">Name</th>
+                <th scope="col">Timestamp</th>
+                <th scope="col">Width</th>
+                <th scope="col">Height</th>
+              </tr>
+            </thead>
+            <tbody>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-sm-5">
+          <div id="image-progress">
+            Showing <span id="imageStart">1</span> to <span id="imageEnd">10</span> of <span id="imageCountTotal">10</span> images
+          </div>
+        </div>
+        <div class="col-sm-7">
+          <div id="image-pagination">
+            <nav aria-label="Image navigation">
+              <ul class="pagination justify-content-end"></ul>
+            </nav>
+          </div>
+        </div>
+      </div>
     </div>
     {{include "@templatedir@/footer.tmpl"}}
     <script type="text/javascript">
+      var n = 10;
+      var offset = 1;
+      var page = 1;
+      var total = 0;
+
       $(document).ready(function() {
         // TODO put this into the template (?)
         $('nav li').removeClass('active');
         $('#images').addClass('active');
 
-        $.get('/api/images/', function(images) {
+        // FIXME This is gross, a promise would be better
+        updateCount();
+        setTimeout(function() {
+          updateTable();
+          updatePagination();
+        }, 250);
+      });
+
+      function setCount(num) {
+        n = num;
+        // FIXME Calculate the proper page without doing this reset
+        page = 1;
+        $('#imageCountSelection').text(n);
+        update();
+      }
+
+      function changePage(pageNum) {
+        page = pageNum;
+        update();
+      }
+
+      function prevPage() {
+        page = (page <= 1) ? 1 : page - 1;
+        update();
+      }
+
+      function nextPage() {
+        page = (page === Math.ceil(total / n)) ? page : page + 1;
+        update();
+      }
+
+      function update() {
+        updateCount();
+        updateTable();
+        updatePagination();
+      }
+
+      function updateCount() {
+        $.get('/api/count/images', function(obj) {
+          total = obj.count;
+          $('#imageCountTotal').text(total);
+        });
+      }
+
+      function updatePagination() {
+        var nPages = Math.ceil(total / n);
+
+        var list = $('#image-pagination > nav > ul');
+        list.empty();
+
+        var prev = $('<li>').addClass('page-item');
+        if (page === 1) {
+          prev.addClass('disabled');
+        }
+        var prevLink = $('<a>')
+          .addClass('page-link')
+          .attr('href', '#')
+          .attr('tabindex', '-1')
+          .attr('onclick', 'prevPage()')
+          .text('Previous');
+        prev.append(prevLink);
+        list.append(prev);
+
+        for (var i = 1; i <= nPages; i++) {
+          var item = $('<li>').addClass('page-item');
+          if (i === page) {
+            item.addClass('disabled');
+          }
+
+          var link = $('<a>')
+            .addClass('page-link')
+            .attr('href', '#')
+            .attr('onclick', 'changePage(' + i + ')')
+            .text(i);
+
+          item.append(link);
+          list.append(item);
+        }
+
+        var next = $('<li>').addClass('page-item');
+        if (page === Math.floor(nPages)) {
+          next.addClass('disabled');
+        }
+        var nextLink = $('<a>')
+          .addClass('page-link')
+          .attr('href', '#')
+          .attr('onclick', 'nextPage()')
+          .text('Next');
+        next.append(nextLink);
+        list.append(next);
+      }
+
+      function updateTable() {
+        if (typeof n === 'undefined' || n === null) {
+          n = 10;
+        }
+
+        offset = (page - 1) * n + 1;
+        $('#image-table > tbody').empty();
+
+        updateCount();
+
+        var path = '/api/images/n/' + n + '/offset/' + offset;
+        $.get(path, function(images) {
+          $('#imageStart').text(images[0].id);
+          $('#imageEnd').text(images[images.length-1].id);
           for (i in images) {
-            if(images[i] != null) {
-              var link = $('<a>').attr('href', '/images/' + images[i].id).text(images[i].name);
-              var row = $('<tr>')
-                .append($('<th>').text(images[i].id).attr('scope', 'row'))
-                .append($('<td>').append(link))
-                .append($('<td>').text(images[i].timestamp))
-                .append($('<td>').text(images[i].width))
-                .append($('<td>').text(images[i].height));
-              $('#image-table > tbody:last-child').append(row);
-            }
+            var link = $('<a>').attr('href', '/images/' + images[i].id).text(images[i].name);
+            var row = $('<tr>')
+              .append($('<th>').text(images[i].id).attr('scope', 'row'))
+              .append($('<td>').append(link))
+              .append($('<td>').text(images[i].timestamp))
+              .append($('<td>').text(images[i].width))
+              .append($('<td>').text(images[i].height));
+            $('#image-table > tbody:last-child').append(row);
           }
         }, 'json');
-      });
+      }
     </script>
   </body>
 </html>

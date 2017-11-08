@@ -54,6 +54,8 @@ public class Icd.Database : GLib.Object {
         } catch (GLib.Error e) {
             error ("An error occurred connecting to the database: %s", e.message);
         }
+
+        dump_db_schema ();
     }
 
     ~Database () {
@@ -149,6 +151,17 @@ public class Icd.Database : GLib.Object {
         } catch (GLib.Error e) {
             critical ("Error deleting table '%s': %s", name, e.message);
         }
+    }
+
+    public int count (string table) throws GLib.Error {
+        var builder = new SqlBuilder (SqlStatementType.SELECT);
+        builder.select_add_target (table, null);
+        builder.select_add_field ("count(*)", null, null);
+        var stmt = builder.get_statement ();
+        var dm = conn.statement_execute_select (stmt, null);
+        var count = dm.get_value_at (0, 0);
+
+        return count.get_int ();
     }
 
     /**
@@ -304,7 +317,7 @@ public class Icd.Database : GLib.Object {
                 var stmt = builder.get_statement ();
                 stmt.get_parameters (out out_params);
 
-                int ret = conn.statement_execute_non_select (stmt, out_params, out last_insert_row);
+                conn.statement_execute_non_select (stmt, out_params, out last_insert_row);
             } catch (Error e) {
                 critical (e.message);
             }

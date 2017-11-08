@@ -50,9 +50,6 @@ public class Icd.ImageRouter : Valum.Router {
         bool exclude_blobs = true;
         string action_str = "none";
 
-        debug ("id: %s action: %s n: %s offset: %s", id.get_string (),
-               action.get_string (), n.get_string (), offset.get_string ());
-
         if (action != null) {
             exclude_blobs = (action.get_string () == "all") ? false : true;
             action_str = action.get_string ();
@@ -142,7 +139,7 @@ public class Icd.ImageRouter : Valum.Router {
                     var object = new Json.Object ();
                     object.set_int_member ("id", image.id);
                     object.set_string_member ("name", image.name);
-                    object.set_int_member ("timestamp", image.timestamp);
+                    object.set_int_member ("timestamp", (int64) image.timestamp);
                     object.set_int_member ("width", image.width);
                     object.set_int_member ("height", image.height);
 
