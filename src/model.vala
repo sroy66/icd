@@ -6,9 +6,9 @@ public class Icd.Model : GLib.Object {
     private static Once<Icd.Model> _instance;
 
     /* Object repositories */
-    public Repository<Icd.Camera?> cameras { get; construct set; }
+    public CameraRepository cameras { get; construct set; }
     public Repository<Icd.Image?> images { get; construct set; }
-    public Repository<Icd.Job?> jobs { get; construct set; }
+    public JobRepository jobs { get; construct set; }
 
     /**
      * @return Singleton for the Config class
@@ -21,9 +21,9 @@ public class Icd.Model : GLib.Object {
         db = new Icd.Database ();
 
         /* Create object repositories */
-        cameras = new Repository<Icd.Camera?> (db);
+        cameras = new CameraRepository (db);
         images = new Repository<Icd.Image?> (db);
-        jobs = new Repository<Icd.Job?> (db);
+        jobs = new JobRepository (db);
     }
 
     public class Repository<T> : GLib.Object {
@@ -169,31 +169,99 @@ public class Icd.Model : GLib.Object {
         }
     }
 
+    public class JobRepository : Repository<Icd.Job?> {
+
+        Mutex mutex;
+        Cond cond;
+        bool busy;
+
+        public JobRepository (Icd.Database db) {
+            base (db);
+            name = "jobs";
+            mutex = new Mutex ();
+            cond = new Cond ();
+            process_queue.begin ();
+        }
+
+        private bool is_empty () {
+            return read_all ().length () == 0;
+        }
+
+        public override int create (Icd.Job? job) {
+            bool empty = is_empty ();
+            int id;
+
+            if (empty) {
+                id = base.create (job);
+                cond.signal ();
+            } else {
+                id = base.create (job);
+            }
+
+            return id;
+        }
+
+        private async void process_queue () {
+            SourceFunc callback = process_queue.callback;
+
+            Thread<int> thread = new Thread<int> ("process_jobs", () => {
+
+                while (true) {
+                    if (!is_empty ()) {
+                        var list = read_all ();
+                        var job = list.nth_data (0);
+                        job.run.begin ((obj, res) => {
+                            this.delete (job.id);
+                            cond.signal ();
+                        });
+                    }
+                    mutex.lock ();
+                    cond.wait (mutex); /* do nothing */
+                    mutex.unlock ();
+                }
+
+                Idle.add ((owned) callback);
+            });
+        }
+    }
+
     public class CameraRepository : Repository<Icd.Camera?> {
+
+        private GUdev.Client client;
+        private List<GUdev.Device>? devices;
 
         public CameraRepository (Icd.Database db) {
             base (db);
             name = "cameras";
-            // do the udev stuff
-            //udev.uevent.connect (connection_cb);
+            string[] subsystems = new string[1];
+            subsystems[0] = "usb";
+            client = new GUdev.Client (subsystems);
+            client.uevent.connect (connect_cb);
+
+            devices = client.query_by_subsystem (subsystems[0]);
+
+            foreach (var device in devices) {
+                if (device.get_devtype () == "usb_device") {
+                    stdout.printf ("Model: %32s%24s%20s\n",
+                                device.get_property ("ID_MODEL_FROM_DATABASE"),
+                                device.get_device_file (),
+                                device.get_devtype ());
+                }
+            }
         }
 
-        private void connection_cb () {
-            /*
-             *if (evt == add) {
-             *    var cam = new Camera ();
-             *    cam.initialize ();
-             *    // fill in cam ?
-             *    create (cam);
-             *} else if (evt == remove) {
-             *    list = read_all ();
-             *    for (cam in list) {
-             *        if (cam.devname == evt.get("DEVNAME") {
-             *            delete (cam.id);
-             *        }
-             *    }
-             *}
-             */
+        private void connect_cb (string action, GUdev.Device device) {
+            debug ("Model: %32s%24s%20s - %s\n",
+                    device.get_property ("ID_MODEL_FROM_DATABASE"),
+                    device.get_device_file (),
+                    device.get_devtype (),
+                    action);
+
+            var keys = device.get_property_keys ();
+            foreach (var key in keys) {
+                string value = device.get_property (key);
+                stdout.printf ("  %s = %s\n", key, value);
+            }
         }
     }
 }

@@ -1,3 +1,7 @@
+public errordomain Icd.JobError {
+    CAMERA
+}
+
 public class Icd.Job : GLib.Object {
 
     [Description(nick = "primary_key")]
@@ -6,7 +10,16 @@ public class Icd.Job : GLib.Object {
     /* In seconds */
     public int interval { get; set; }
 
-    public int count { get; set; }
+    private int _count;
+    public int count {
+        get {
+            return _count;
+        }
+        set {
+            _count = value;
+            remaining = count;
+        }
+    }
 
     public int remaining { get; set; }
 
@@ -22,27 +35,37 @@ public class Icd.Job : GLib.Object {
         return str;
     }
 
-    public async void run () {
-        var camera = new Icd.Camera ();
+    public async void run () throws Icd.JobError {
+        Icd.Camera camera;
+
+        try {
+            camera = new Icd.Camera ();
+        } catch (Icd.CameraError e) {
+            throw new Icd.JobError.CAMERA (e.message);
+        }
+
         var model = Icd.Model.get_default ();
 
         running = true;
         while (running) {
-            for (int i = 0; i < count; i++) {
-                remaining = count - i;
+            for (int i = count - remaining; i < count; i++) {
+                debug ("remaining: %d", remaining);
                 try {
                     /* take a picture and save the image in the database */
                     var image = camera.capture ();
-                    debug ("image length: %lu width: %d height: %d",
-                                                          image.data.length,
-                                                          image.width,
-                                                          image.height);
+                    /*
+                     *debug ("image length: %lu width: %d height: %d",
+                     *                                      image.data.length,
+                     *                                      image.width,
+                     *                                      image.height);
+                     */
                     model.images.create (image);
                     yield nap (interval); //FIXME This is not accurate. Use a thread.
                 } catch (GLib.Error e) {
                     critical ("GLib.Error: %s", e.message);
                 }
 
+                remaining = count - i - 1;
                 model.jobs.update (this);
             }
 

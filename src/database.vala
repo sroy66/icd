@@ -354,7 +354,7 @@ public class Icd.Database : GLib.Object {
 
             sql.data[sql.length - 1] = ' ';
             sql += "WHERE id = %d".printf (id);
-
+            debug (sql);
             conn.execute_non_select_command (sql);
         } catch (GLib.Error e) {
             throw new DatabaseError.EXECUTE_QUERY (

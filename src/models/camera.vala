@@ -1,5 +1,10 @@
 using GPhoto;
 
+public errordomain Icd.CameraError {
+    INITIALIZE,
+    CAPTURE
+}
+
 public class Icd.Camera : GLib.Object {
 
     [Description(nick = "primary_key")]
@@ -21,22 +26,25 @@ public class Icd.Camera : GLib.Object {
     /**
      * TODO Throw error if connection fails and use that in an HTTP response
      */
-    private void initialize_camera () {
+    private void initialize_camera () throws Icd.CameraError {
         Result ret;
 
         ret = GPhoto.Camera.create (out camera);
         if (ret != Result.OK) {
             critical (ret.to_full_string ());
+            throw new Icd.CameraError.INITIALIZE (
+                    "Camera initialization failed: %s".printf (ret.to_full_string ()));
         }
 
         gp_context = new GPhoto.Context ();
         ret = camera.init (gp_context);
         if (ret != Result.OK) {
-            critical (ret.to_full_string ());
+            throw new Icd.CameraError.INITIALIZE (
+                    "Camera initialization failed: %s".printf (ret.to_full_string ()));
         }
     }
 
-    public Icd.Image capture () throws GLib.Error {
+    public Icd.Image capture () throws Icd.CameraError {
         Result ret;
         CameraFile file = null;
         CameraFilePath path;
