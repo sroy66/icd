@@ -15,8 +15,13 @@ public class Icd.Camera : GLib.Object {
     private GPhoto.Camera camera;
     private GPhoto.Context gp_context;
 
-    construct {
-        initialize_camera ();
+    public Camera () throws Icd.CameraError {
+        try {
+            initialize_camera ();
+        } catch (Icd.CameraError e) {
+            critical (e.message);
+            throw e;
+        }
     }
 
     ~Camera () {
@@ -60,6 +65,8 @@ public class Icd.Camera : GLib.Object {
         ret = camera.capture (CameraCaptureType.IMAGE, out path, gp_context);
         if (ret != Result.OK) {
             critical (ret.to_full_string ());
+            throw new Icd.CameraError.CAPTURE (
+                    "Camera capture failed: %s".printf (ret.to_full_string ()));
         } else {
             fd = FileUtils.mkstemp (tmpname);
             if (fd == -1) {
@@ -78,6 +85,9 @@ public class Icd.Camera : GLib.Object {
                                     gp_context);
                 if (ret != Result.OK) {
                     critical (ret.to_full_string ());
+                    throw new Icd.CameraError.CAPTURE (
+                            "Camera capture failed: %s".printf (ret.to_full_string ()));
+
                 } else {
                     CameraFileInfo info;
                     ret = camera.get_file_info ((string) path.folder,
@@ -86,6 +96,8 @@ public class Icd.Camera : GLib.Object {
                                                 gp_context);
                     if (ret != Result.OK) {
                         critical (ret.to_full_string ());
+                        throw new Icd.CameraError.CAPTURE (
+                                "Camera capture failed: %s".printf (ret.to_full_string ()));
                     } else {
                         timestamp = info.file.mtime;
                         width = (int) info.file.width;

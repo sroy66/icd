@@ -109,6 +109,9 @@ public class Icd.Image : GLib.Object, Json.Serializable {
                                       Json.Node property_node) {
         if (property_name == "data") {
             warning ("Image data can't be deserialized from JSON yet");
+            void* ptr = null;
+            value = Value (typeof (void*));
+            value.set_pointer (ptr);
             return false;
         } else if (property_name == "timestamp") {
             value = Value (typeof (long));

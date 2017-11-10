@@ -145,6 +145,21 @@ public class Icd.Model : GLib.Object {
             }
         }
 
+        /**
+         * Remove records where the given column has a given value
+         *
+         * @param column The name of the column
+         * @param value The value that matches
+         */
+        public virtual void remove (string column, string value) {
+            try {
+                db.delete_where (name, column, value);
+                /*debug ("id: %d", id.get_int ());*/
+            } catch (GLib.Error e) {
+                critical (e.message);
+            }
+        }
+
         public virtual void delete_all () {
             try {
                 db.delete (name, null);
@@ -173,13 +188,12 @@ public class Icd.Model : GLib.Object {
 
         Mutex mutex;
         Cond cond;
-        bool busy;
 
         public JobRepository (Icd.Database db) {
             base (db);
             name = "jobs";
-            mutex = new Mutex ();
-            cond = new Cond ();
+            mutex = Mutex ();
+            cond = Cond ();
             process_queue.begin ();
         }
 
@@ -202,10 +216,7 @@ public class Icd.Model : GLib.Object {
         }
 
         private async void process_queue () {
-            SourceFunc callback = process_queue.callback;
-
-            Thread<int> thread = new Thread<int> ("process_jobs", () => {
-
+            new Thread<int> ("process_jobs", () => {
                 while (true) {
                     if (!is_empty ()) {
                         var list = read_all ();
@@ -219,8 +230,6 @@ public class Icd.Model : GLib.Object {
                     cond.wait (mutex); /* do nothing */
                     mutex.unlock ();
                 }
-
-                Idle.add ((owned) callback);
             });
         }
     }
@@ -239,28 +248,70 @@ public class Icd.Model : GLib.Object {
             client.uevent.connect (connect_cb);
 
             devices = client.query_by_subsystem (subsystems[0]);
-
             foreach (var device in devices) {
-                if (device.get_devtype () == "usb_device") {
-                    stdout.printf ("Model: %32s%24s%20s\n",
-                                device.get_property ("ID_MODEL_FROM_DATABASE"),
-                                device.get_device_file (),
-                                device.get_devtype ());
+                if (device.has_property ("ID_MODEL_FROM_DATABASE")) {
+                    if ((device.get_property ("ID_MODEL_FROM_DATABASE").contains ("EOS"))) {
+                        if (device.get_devtype () == "usb_device") {
+                            try {
+                                add (device);
+                            } catch (Icd.CameraError e) {
+                                critical ("Error adding camera to repository: %s", e.message);
+                            }
+                        }
+                    }
                 }
             }
         }
 
-        private void connect_cb (string action, GUdev.Device device) {
-            debug ("Model: %32s%24s%20s - %s\n",
-                    device.get_property ("ID_MODEL_FROM_DATABASE"),
-                    device.get_device_file (),
-                    device.get_devtype (),
-                    action);
+        private void add (GUdev.Device device) throws Icd.CameraError {
+            GPhoto.Camera camera;
+            GPhoto.Context gp_context;
+            GPhoto.Result ret;
 
-            var keys = device.get_property_keys ();
-            foreach (var key in keys) {
-                string value = device.get_property (key);
-                stdout.printf ("  %s = %s\n", key, value);
+            gp_context = new GPhoto.Context ();
+
+            ret = GPhoto.Camera.create (out camera);
+            if (ret !=GPhoto. Result.OK) {
+                critical (ret.to_full_string ());
+                throw new Icd.CameraError.INITIALIZE (
+                        "Camera initialization failed: %s".printf (ret.to_full_string ()));
+            }
+
+            gp_context = new GPhoto.Context ();
+            ret = camera.init (gp_context);
+            if (ret != GPhoto.Result.OK) {
+                throw new Icd.CameraError.INITIALIZE (
+                        "Camera initialization failed: %s".printf (ret.to_full_string ()));
+            }
+
+            camera.exit (gp_context);
+            var icd_camera = new Icd.Camera ();
+            icd_camera.name = device.get_property ("DEVNAME");
+            create (icd_camera);
+            debug ("A camera at %s is connected", icd_camera.name);
+        }
+
+
+        private void connect_cb (string action, GUdev.Device device) {
+           if (device.has_property ("ID_MODEL_FROM_DATABASE")) {
+               if ((device.get_property ("ID_MODEL_FROM_DATABASE").contains ("EOS"))) {
+                   if (device.get_devtype () == "usb_device") {
+                        if (action =="add") {
+                            try {
+                                add (device);
+                            } catch (Icd.CameraError e) {
+                                critical ("Error adding camera to repository: %s", e.message);
+                            }
+                        } else if (action == "remove") {
+                            var devname = device.get_property ("DEVNAME");
+                            remove ("name", devname);
+                            debug ("A camera at %s was disconnected", devname);
+                        } else {
+                            warning ("Device: %s :: Unknown action: %s",
+                                            device.get_property ("ID_MODEL_FROM_DATABASE"), action);
+                        }
+                   }
+               }
             }
         }
     }

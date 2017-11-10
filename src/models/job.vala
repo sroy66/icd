@@ -49,7 +49,6 @@ public class Icd.Job : GLib.Object {
         running = true;
         while (running) {
             for (int i = count - remaining; i < count; i++) {
-                debug ("remaining: %d", remaining);
                 try {
                     /* take a picture and save the image in the database */
                     var image = camera.capture ();
