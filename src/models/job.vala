@@ -49,6 +49,8 @@ public class Icd.Job : GLib.Object {
         running = true;
         while (running) {
             for (int i = count - remaining; i < count; i++) {
+                var start = get_monotonic_time ();
+                var end = start + interval * 1000;
                 try {
                     /* take a picture and save the image in the database */
                     var image = camera.capture ();
@@ -59,7 +61,12 @@ public class Icd.Job : GLib.Object {
                      *                                      image.height);
                      */
                     model.images.create (image);
-                    yield nap (interval); //FIXME This is not accurate. Use a thread.
+                    var snooze = (int)((end - get_monotonic_time ()) / 1000);
+                    if (snooze > 0) {
+                        yield nap (snooze);
+                    } else {
+                        warning ("The interval time (%d) for job %d is too short for the camera", interval, id);
+                    }
                 } catch (GLib.Error e) {
                     critical ("GLib.Error: %s", e.message);
                 }

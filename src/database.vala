@@ -123,6 +123,10 @@ public class Icd.Database : GLib.Object {
                 value += " NOT NULL PRIMARY KEY";
             }
 
+            if (spec.get_nick () == "unique") {
+                value += " NOT NULL UNIQUE";
+            }
+
             values += value;
         }
 
@@ -318,7 +322,9 @@ public class Icd.Database : GLib.Object {
                 stmt.get_parameters (out out_params);
                 conn.statement_execute_non_select (stmt, out_params, out last_insert_row);
             } catch (Error e) {
-                critical (e.message);
+                if (e.code != 4) {
+                    critical ("Error: %s code: %d", e.message, e.code);
+                }
             }
 
              /*get the id*/
