@@ -20,6 +20,9 @@ public class Icd.Router : Valum.Router {
             HashTable<string, string>? @params = new HashTable<string, string> (str_hash, str_equal);
             @params["charset"] = "utf-8";
             res.headers.set_content_type ("text/html", @params);
+            res.headers.append ("Access-Control-Allow-Origin", "*");
+            res.headers.append ("Access-Control-Allow-Methods", "GET, POST, OPTIONS, PUT, DELETE");
+            res.headers.append ("Access-Control-Allow-Headers", "Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
             return next ();
         });
 

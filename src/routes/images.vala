@@ -9,11 +9,6 @@ public class Icd.ImageRouter : Valum.Router {
             return next ();
         });
 
-        use ((req, res, next) => {
-            res.headers.append ("Access-Control-Allow-Origin", "*");
-            return next ();
-        });
-
         rule (Method.GET,
               "/(<int:id>)?(/<action>)?",
               view_cb);
