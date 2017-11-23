@@ -6,11 +6,13 @@ using Template;
 
 public class Icd.Router : Valum.Router {
 
-    private Template.Template index;
-    private Template.Template image;
-    private Template.Template images;
-    private Template.Template cameras;
-    private Template.TemplateLocator locator;
+    /*
+     *private Template.Template index;
+     *private Template.Template image;
+     *private Template.Template images;
+     *private Template.Template cameras;
+     *private Template.TemplateLocator locator;
+     */
 
     construct {
         use (basic ());
@@ -26,21 +28,25 @@ public class Icd.Router : Valum.Router {
             return next ();
         });
 
-        once ((req, res, next) => {
-            load_templates ();
-            return next ();
-        });
+        /*
+         *once ((req, res, next) => {
+         *    load_templates ();
+         *    return next ();
+         *});
+         */
 
         /* Routes */
-        get ("/", index_cb);
-        get ("/images", images_cb);
-        get ("/images/<int:id>", image_cb);
-        get ("/cameras", cameras_cb);
-        get ("/static/<path:path>", sequence (serve_from_file (File.new_for_path ("src/static")),
-                                              (req, res, next, ctx) => {
-            throw new ClientError.NOT_FOUND ("The static resource '%s' were not found.",
-                                             ctx["path"].get_string ());
-        }));
+        /*
+         *get ("/", index_cb);
+         *get ("/images", images_cb);
+         *get ("/images/<int:id>", image_cb);
+         *get ("/cameras", cameras_cb);
+         *get ("/static/<path:path>", sequence (serve_from_file (File.new_for_path ("src/static")),
+         *                                      (req, res, next, ctx) => {
+         *    throw new ClientError.NOT_FOUND ("The static resource '%s' were not found.",
+         *                                     ctx["path"].get_string ());
+         *}));
+         */
 
         /* Metrics from system */
         get ("/api/count/<string:table>", count_cb);
@@ -60,62 +66,57 @@ public class Icd.Router : Valum.Router {
         use (basepath ("/api/jobs", job_router.handle));
     }
 
-    private void load_templates () {
-        locator = new TemplateLocator ();
-        locator.append_search_path (Icd.TEMPLATEDIR);
-        locator.append_search_path ("/templates");
+/*
+ *    private void load_templates () {
+ *        locator = new TemplateLocator ();
+ *        locator.append_search_path (Icd.TEMPLATEDIR);
+ *        locator.append_search_path ("/templates");
+ *
+ *        index = new Template.Template (locator);
+ *        image = new Template.Template (locator);
+ *        images = new Template.Template (locator);
+ *        cameras = new Template.Template (locator);
+ *
+ *        try {
+ *            index.parse_file (File.new_for_path (Path.build_filename (Icd.TEMPLATEDIR, "index.tmpl")));
+ *            image.parse_file (File.new_for_path (Path.build_filename (Icd.TEMPLATEDIR, "image.tmpl")));
+ *            images.parse_file (File.new_for_path (Path.build_filename (Icd.TEMPLATEDIR, "images.tmpl")));
+ *            cameras.parse_file (File.new_for_path (Path.build_filename (Icd.TEMPLATEDIR, "cameras.tmpl")));
+ *        } catch (GLib.Error e) {
+ *            error (e.message);
+ *        }
+ *    }
+ */
 
-        index = new Template.Template (locator);
-        image = new Template.Template (locator);
-        images = new Template.Template (locator);
-        cameras = new Template.Template (locator);
-
-        try {
-            index.parse_file (File.new_for_path (Path.build_filename (Icd.TEMPLATEDIR, "index.tmpl")));
-            image.parse_file (File.new_for_path (Path.build_filename (Icd.TEMPLATEDIR, "image.tmpl")));
-            images.parse_file (File.new_for_path (Path.build_filename (Icd.TEMPLATEDIR, "images.tmpl")));
-            cameras.parse_file (File.new_for_path (Path.build_filename (Icd.TEMPLATEDIR, "cameras.tmpl")));
-        } catch (GLib.Error e) {
-            error (e.message);
-        }
-
-        /* FIXME Would like to be able to load templates as resources but includes fail */
-        /*
-         *var res_tmpl = new Template.Template (locator);
-         *res_tmpl.parse_resource ("/templates/index.tmpl");
-         */
-    }
-
-    private bool index_cb (Request req, Response res, NextCallback next, Valum.Context ctx)
-                           throws GLib.Error {
-        var scope = new Scope ();
-        return index.expand (res.body, scope);
-    }
-
-    /**
-     * TODO Figure out why this doesn't work in a single route for `images(/<int:id>)?`
-     */
-    private bool image_cb (Request req, Response res, NextCallback next, Valum.Context ctx)
-                           throws GLib.Error {
-        var id = ctx["id"];
-        var scope = new Scope ();
-        var image_id = scope.get ("id");
-        image_id.assign_value (id);
-
-        return image.expand (res.body, scope);
-    }
-
-    private bool images_cb (Request req, Response res, NextCallback next, Valum.Context ctx)
-                            throws GLib.Error {
-        var scope = new Scope ();
-        return images.expand (res.body, scope);
-    }
-
-    private bool cameras_cb (Request req, Response res, NextCallback next, Valum.Context ctx)
-                             throws GLib.Error {
-        var scope = new Scope ();
-        return cameras.expand (res.body, scope);
-    }
+/*
+ *    private bool index_cb (Request req, Response res, NextCallback next, Valum.Context ctx)
+ *                           throws GLib.Error {
+ *        var scope = new Scope ();
+ *        return index.expand (res.body, scope);
+ *    }
+ *
+ *    private bool image_cb (Request req, Response res, NextCallback next, Valum.Context ctx)
+ *                           throws GLib.Error {
+ *        var id = ctx["id"];
+ *        var scope = new Scope ();
+ *        var image_id = scope.get ("id");
+ *        image_id.assign_value (id);
+ *
+ *        return image.expand (res.body, scope);
+ *    }
+ *
+ *    private bool images_cb (Request req, Response res, NextCallback next, Valum.Context ctx)
+ *                            throws GLib.Error {
+ *        var scope = new Scope ();
+ *        return images.expand (res.body, scope);
+ *    }
+ *
+ *    private bool cameras_cb (Request req, Response res, NextCallback next, Valum.Context ctx)
+ *                             throws GLib.Error {
+ *        var scope = new Scope ();
+ *        return cameras.expand (res.body, scope);
+ *    }
+ */
 
     private bool count_cb (Request req, Response res, NextCallback next, Valum.Context ctx)
                            throws GLib.Error {
